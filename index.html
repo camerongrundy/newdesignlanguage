@@ -3013,7 +3013,7 @@
 
       <p class="ds-sub">Foundation ramps</p>
       <section class="domain" id="ramps"></section>
-      <p class="copy-hint" style="padding:0;margin-top:10px">Contrast: only the 900 step of each hue clears 4.5:1 on white &mdash; except <span class="tokname">primary/900</span> and <span class="tokname">tertiary/900</span>, which are fill-and-accent colours and must never carry body text.</p>
+      <p class="copy-hint" style="padding:0;margin-top:10px">Contrast: only the 900 step of each hue clears 4.5:1 on white &mdash; except <span class="tokname">brand/900</span> and <span class="tokname">tertiary/900</span>, which are fill-and-accent colours and must never carry body text. <span class="tokname">primary/900</span> now holds the navy and clears 9.62:1 on white.</p>
 
       <p class="ds-sub">Semantic tokens &mdash; how Foundation is consumed</p>
       <section class="domain">
@@ -4572,8 +4572,10 @@
 
   /* ================= 06 · COLORS ================= */
   var FOUNDATION = [
-    {g:"primary",  role:"Brand accent · aqua",              steps:[["900","#2ECCFF"],["800","#AAEBFF"],["700","#DDF7FF"],["600","#F3FCFF"]]},
-    {g:"secondary",role:"Primary action · navy",            steps:[["900","#294088"],["800","#DCDFEB"],["700","#DDE1EC"],["600","#F3F4F8"]]},
+    /* Navy is primary in Calypso - a change from the previous system, where
+       the aqua held that slot. */
+    {g:"primary",  role:"Primary action · navy",            steps:[["900","#294088"],["800","#DCDFEB"],["700","#DDE1EC"],["600","#F3F4F8"]]},
+    {g:"brand",    role:"Brand accent · aqua",              steps:[["900","#2ECCFF"],["800","#AAEBFF"],["700","#DDF7FF"],["600","#F3FCFF"]]},
     {g:"tertiary", role:"Highlight · gold",                 steps:[["900","#FFBF00"],["800","#FFE597"],["700","#FFF5D6"],["600","#FFFBF0"]]},
     {g:"alert",    role:"Needs attention · amber",          steps:[["900","#AE6400"],["800","#DEC097"],["700","#F2E6D6"],["600","#FAF6F0"]]},
     {g:"warning",  role:"At risk / violation · red",        steps:[["900","#D70049"],["800","#EE97B5"],["700","#F9D6E2"],["600","#FDF0F5"]]},
