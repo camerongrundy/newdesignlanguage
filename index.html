@@ -1369,6 +1369,10 @@
 
   /* a jumped-to section shouldn't sit flush against the viewport edge */
   .ds-sec{scroll-margin-top:16px}
+  /* trailing trim belongs to whatever section ends up last, not to a
+     hard-coded one - Colors carried it inline and kept it after Pain
+     Points was added below it */
+  .main > .ds-sec:last-of-type{margin-bottom:8px}
 
   /* Pager -----------------------------------------------------------------
      Arrows alone make people step. The jump field, the rows choice and the
@@ -3000,7 +3004,7 @@
     </section>
 
     <!-- ==================== COLORS ==================== -->
-    <section class="ds-sec" id="sec-colors" style="margin-bottom:8px">
+    <section class="ds-sec" id="sec-colors">
       <div class="ds-sec-head">
         <span class="ds-kicker">11</span>
         <h2>Colors</h2>
