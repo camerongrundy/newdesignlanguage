@@ -824,8 +824,11 @@
   }
   .selfly-row .x:hover{border-color:var(--crit);color:var(--crit);background:var(--crit-tint)}
   .selfly-none{padding:34px 10px;text-align:center;font-size:14px;color:var(--text-3)}
-  .tbl thead th.sortable .arw{opacity:0;margin-left:5px;font-size:9px;transition:opacity .12s ease}
-  .tbl thead th.sortable:hover .arw{opacity:.55}
+  /* The caret is always there. Revealing it on hover means a column's only
+     signal that it sorts is a signal you have to already suspect to find -
+     and it does nothing for touch or for keyboard. */
+  .tbl thead th.sortable .arw{opacity:.32;margin-left:5px;font-size:9px;transition:opacity .12s ease,color .12s ease}
+  .tbl thead th.sortable:hover .arw{opacity:.7}
   .tbl thead th.sortable[data-dir] .arw{opacity:1;color:var(--brand)}
   .tbl thead th.sortable[data-dir]{color:var(--text-2)}
 
@@ -1441,9 +1444,10 @@
   /* ============ 09 · LOADING STATES ============ */
   /* Held still by default so the page isn't a wall of spinners; each group
      plays on hover or keyboard focus. The live demos run on their own. */
-  .anim-hold .spin,.anim-hold .sk,.anim-hold .sk-block,.anim-hold .pp-sk,
+  .anim-hold .spin-wave,.anim-hold .spin-lvl,.anim-hold .sk,.anim-hold .sk-block,.anim-hold .pp-sk,
   .anim-hold .ibar i,.anim-hold .bar i::after{animation-play-state:paused}
-  .anim-hold:hover .spin,.anim-hold:focus-within .spin,
+  .anim-hold:hover .spin-wave,.anim-hold:focus-within .spin-wave,
+  .anim-hold:hover .spin-lvl,.anim-hold:focus-within .spin-lvl,
   .anim-hold:hover .sk,.anim-hold:focus-within .sk,
   .anim-hold:hover .sk-block,.anim-hold:focus-within .sk-block,
   .anim-hold:hover .pp-sk,.anim-hold:focus-within .pp-sk,
@@ -1457,9 +1461,16 @@
   .anim-hint svg{flex:none;margin-top:2px;color:var(--brand)}
   .anim-hint b{color:var(--text);font-weight:600}
 
-  @keyframes cal-spin{to{transform:rotate(360deg)}}
-  .spin{width:15px;height:15px;flex:none;animation:cal-spin .72s linear infinite;transform-origin:50% 50%}
-  .spin.lg{width:26px;height:26px;animation-duration:.85s}
+  /* The progress mark is a droplet filling and draining, not a rotating arc.
+     The wave slides sideways while the level rises and falls, so the two
+     motions never sync up into something that looks like a loop. */
+  .cal-defs{position:absolute;width:0;height:0;overflow:hidden}
+  @keyframes cal-wave{to{transform:translateX(8px)}}        /* one wave period */
+  @keyframes cal-fill{0%,100%{transform:translateY(4.4px)}50%{transform:translateY(-2.4px)}}
+  .spin{width:15px;height:15px;flex:none;overflow:hidden}   /* the wave is clipped to the droplet already */
+  .spin.lg{width:26px;height:26px}
+  .spin-wave{animation:cal-wave 1.15s linear infinite}
+  .spin-lvl{animation:cal-fill 2.3s ease-in-out infinite}
 
   .ld-card{padding:20px 22px;margin-bottom:30px}
   .ld-grid{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-end}
@@ -1571,7 +1582,8 @@
   /* Motion off: nothing rotates, sweeps or shimmers. The labels already say
      everything the movement was saying. */
   @media (prefers-reduced-motion:reduce){
-    .spin{animation:none;opacity:.85}
+    .spin-wave,.spin-lvl{animation:none}
+    .spin-lvl{transform:translateY(1.5px)}      /* holds a half-full droplet */
     .sk{animation:none;background:var(--surface-3)}
     .sk-block,.pp-sk{animation:none;opacity:.8}
     .ibar i{animation:none;width:100%;opacity:.55}
@@ -1706,7 +1718,7 @@
   .ld-tbl td:has(.er-rowacts){padding-top:12px;padding-bottom:12px}
 
   /* ============ 12 · CUSTOMER PAIN POINTS ============ */
-  .pp{position:relative;padding-left:56px;margin-bottom:54px}
+  .pp{position:relative;padding-left:56px;margin-bottom:54px;scroll-margin-top:16px}
   .pp:last-of-type{margin-bottom:22px}
   .pp-n{
     position:absolute;left:0;top:2px;width:38px;height:38px;border-radius:50%;
@@ -1919,10 +1931,71 @@
   }
   .pp-replay:hover{background:var(--brand-tint);border-color:var(--brand)}
   .pp-replay:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+  /* Nested navigation ------------------------------------------------------
+     The parent both navigates and reveals; the chevron only reveals. One
+     control doing both jobs makes it impossible to open a group without
+     leaving the page you are on. */
+  .nav-group{display:flex;flex-direction:column;gap:2px}
+  .nav-row{display:flex;align-items:center;gap:2px}
+  /* the chevron eats 28px, so the parent gives back its right padding
+     rather than truncating a label its siblings show in full */
+  .nav .nav-row .anchor{flex:1 1 auto;min-width:0;width:auto;padding-right:2px;gap:8px}
+  .nav .nav-row .anchor .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* .nav button sets width:100% and outranks a single-class selector, so the
+     chevron took the whole row and crushed the label to nothing */
+  .nav .nav-tog{
+    flex:none;width:28px;height:34px;padding:0;border-radius:var(--r);
+    display:grid;place-items:center;color:var(--text-3);
+    transition:transform .16s ease,color .12s ease,background .12s ease;
+  }
+  .nav .nav-tog:hover{background:var(--surface-3);color:var(--text)}
+  .nav .nav-tog:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+  .nav .nav-tog[aria-expanded="true"]{color:var(--brand)}
+  .nav .nav-tog[aria-expanded="true"] svg{transform:rotate(180deg)}
+  .nav .nav-tog svg{transition:transform .16s ease}
+  @media (prefers-reduced-motion:reduce){.nav .nav-tog svg{transition:none}}
+
+  .nav-sub{
+    display:flex;flex-direction:column;gap:1px;
+    margin:2px 0 6px 21px;padding-left:11px;border-left:1px solid var(--border);
+  }
+  .nav .nav-sub button.subanchor{
+    padding:7px 11px;font-size:13px;font-weight:500;color:var(--text-2);
+    border-radius:7px;gap:9px;
+  }
+  .nav .nav-sub button.subanchor::before{
+    content:attr(data-pp);flex:none;
+    font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums;
+    color:var(--text-3);min-width:12px;
+  }
+  .nav .nav-sub button.subanchor:hover{background:var(--surface-3);color:var(--text)}
+  .nav .nav-sub button.subanchor[aria-current="true"]{
+    background:var(--brand-tint);color:var(--brand);font-weight:600;
+  }
+  .nav .nav-sub button.subanchor[aria-current="true"]::before{color:var(--brand)}
+  /* collapsed to the icon rail there is no room for a second level */
+  .app.rail .nav .nav-tog,.app.rail .nav-sub{display:none}
+  @media (max-width:920px){
+    .app.rail .nav .nav-tog{display:grid}
+    .app.rail .nav-sub{display:flex}
+  }
+
+  /* status-as-control: no Edit button, the value opens itself */
+  .ld-statedit{
+    display:inline-flex;align-items:center;gap:7px;padding:3px 5px;margin:-3px -5px;
+    border-radius:7px;background:none;border:1px solid transparent;
+  }
+  .ld-statedit .pen{color:var(--text-3);opacity:0;transition:opacity .12s ease}
+  .ld-statedit:hover{background:var(--surface-3);border-color:var(--border)}
+  .ld-statedit:hover .pen{opacity:1}
+  .ld-statedit:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+  .ld-statedit:focus-visible .pen{opacity:1}
 </style>
 
 </head>
 <body>
+<svg class="cal-defs" width="0" height="0" aria-hidden="true" focusable="false"><defs><clipPath id="calDrop"><path d="M8 1.3 13.4 9.1a5.8 5.8 0 1 1-10.8 0L8 1.3Z"/></clipPath></defs></svg>
 <div class="app" id="app">
 
   <!-- ============ SIDEBAR ============ -->
@@ -1969,7 +2042,21 @@
       <button type="button" class="anchor" data-sec="loading" title="Loading States"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.6" stroke="currentColor" stroke-width="1.4" stroke-opacity=".38"/><path d="M8 2.4A5.6 5.6 0 0 1 13.6 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="lbl">Loading States</span></button>
       <button type="button" class="anchor" data-sec="error" title="Error States"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.1" stroke="currentColor" stroke-width="1.4"/><path d="M8 4.7v3.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11.2" r=".85" fill="currentColor"/></svg><span class="lbl">Error States</span></button>
       <button type="button" class="anchor" data-sec="colors" title="Colors"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="6.2" cy="6.2" r="3.4" stroke="currentColor" stroke-width="1.3"/><circle cx="9.8" cy="9.8" r="3.4" stroke="currentColor" stroke-width="1.3"/></svg><span class="lbl">Colors</span></button>
-      <button type="button" class="anchor" data-sec="pain" title="Customer Pain Points"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 13.4S2.6 9 2.6 5.9A2.9 2.9 0 0 1 8 4.3a2.9 2.9 0 0 1 5.4 1.6C13.4 9 8 13.4 8 13.4Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="lbl">Customer Pain Points</span></button>
+      <div class="nav-group">
+        <div class="nav-row">
+          <button type="button" class="anchor" data-sec="pain" title="Customer Pain Points"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 13.4S2.6 9 2.6 5.9A2.9 2.9 0 0 1 8 4.3a2.9 2.9 0 0 1 5.4 1.6C13.4 9 8 13.4 8 13.4Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="lbl">Customer Pain Points</span></button>
+          <button type="button" class="nav-tog" id="navPainTog" aria-expanded="false" aria-controls="navPainList" aria-label="Show the five pain points">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.8 6.2 8 10.4l4.2-4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="nav-sub" id="navPainList" hidden>
+          <button type="button" class="subanchor" data-pp="1">Next button spam</button>
+          <button type="button" class="subanchor" data-pp="2">Table Record U-turns</button>
+          <button type="button" class="subanchor" data-pp="3">Dead Clicks</button>
+          <button type="button" class="subanchor" data-pp="4">Responsive Action</button>
+          <button type="button" class="subanchor" data-pp="5">Clear form states</button>
+        </div>
+      </div>
     </nav>
 
     <div class="side-foot">
@@ -2018,7 +2105,6 @@
           </div>
         </div>
       </section>
-      <p class="ds-note" style="margin-top:10px">Watch the header on the left as you press these. Every control is the same one a person would use directly &mdash; nothing here is a mock.</p>
 
 
       <p class="ds-sub">Anatomy</p>
@@ -2065,7 +2151,6 @@
 
             <ol class="anat-key" id="anatKey"></ol>
           </div>
-          <p class="ds-note" style="margin-top:20px;max-width:none">This one is a facsimile, not the real header &mdash; it is here so you can poke at every region without leaving the page. Hover a number to light up the part it names, and press anything in the model: the toggle collapses it to a rail, the switcher and the avatar open their menus, and the section list moves its active state.</p>
         </div>
       </section>
 
@@ -2086,7 +2171,6 @@
           </div>
         </section>
       </div>
-      <p class="ds-note">The rail is a width change, not a different component &mdash; same markup, same handlers, one class on the shell. Anything that only exists in one of the two states is a bug, which is why the collapsed state keeps tooltips rather than dropping the labels outright.</p>
     </section>
 
     <!-- ==================== FONTS ==================== -->
@@ -2182,7 +2266,6 @@
           </div></div>
         </div>
       </section>
-      <p class="ds-note">One primary per view. If a screen seems to need two, one of them is secondary. Tertiary carries no boundary, so it is only for actions sitting inside a container that already has one &mdash; a card, a toolbar, a table row. Filled destructive is for the confirming press, typically the last thing in a dialog; the outline is for the action that opens that dialog, sitting in a toolbar or a row where a solid red would shout across the whole page.</p>
 
       <p class="ds-sub">Sizes</p>
       <section class="domain">
@@ -2203,13 +2286,11 @@
           </div></div>
         </div>
       </section>
-      <p class="ds-note">Small is for dense surfaces &mdash; table toolbars, card headers, inline row actions. Anything a person is meant to find without looking for it stays at the default size.</p>
 
       <p class="ds-sub">States</p>
       <section class="domain">
         <div class="btn-grid" id="btnStates"></div>
       </section>
-      <p class="ds-note">Hover and focus are live above &mdash; tab through the row to see the ring. The focus ring is 2px of <span class="tokname">--accent</span> at a 2px offset, so it lands on the page background rather than on the button, which is what keeps it at 3:1 even against the primary fill.</p>
 
       <p class="ds-sub">Contrast audit</p>
       <div class="tbl-card">
@@ -2227,7 +2308,6 @@
           </table>
         </div>
       </div>
-      <p class="ds-note">The outlined buttons were the problem worth fixing. A border only counts as a boundary if it clears 3:1 against what sits next to it &mdash; WCAG 2.2 SC 1.4.11 &mdash; and the old <span class="tokname">--border-input</span> at <span class="swatch-dot" style="background:#CFCFCF"></span><b>#CFCFCF</b> managed 1.49:1 on this background. It read as a boundary to anyone with full colour vision and vanished for everyone else. <span class="swatch-dot" style="background:#858C99"></span><b>#858C99</b> clears it on both the page background and a white card, so the same token works wherever the button lands. Disabled controls are exempt from both rules, but the label is kept above 4.5:1 anyway so the state stays readable.</p>
     </section>
 
     <!-- ==================== CARDS ==================== -->
@@ -2332,7 +2412,6 @@
             <span class="spill crit">Overdue</span>
             <span class="spill neutral">Not required</span>
           </div>
-          <p class="ds-note">Pills label the <i>card</i>; dot-chips label a <i>row</i>. Both read from the same four status tokens, so a colour means the same thing wherever it lands.</p>
         </div>
       </section>
     </section>
@@ -2372,7 +2451,6 @@
             <button type="button" aria-pressed="true">Table</button>
             <button type="button" aria-pressed="false">Map</button>
           </div>
-          <p class="ds-note">The pressed segment takes the white surface and a two-layer shadow. Reach for this only when the options are views of the same records &mdash; if the content differs, it is a tab.</p>
         </div>
       </section>
     </section>
@@ -2410,7 +2488,6 @@
           </nav>
         </div>
       </section>
-      <p class="ds-note">Four levels is the ceiling. A middle step whose label runs long truncates with an ellipsis and keeps its full label in a tooltip; the first and last steps never truncate. Hover underlines a link and darkens it one step.</p>
     </section>
 
     <!-- ==================== DATA VISUALIZATION ==================== -->
@@ -2444,7 +2521,6 @@
           </div>
         </section>
       </div>
-      <p class="ds-note" style="margin-top:-12px">Any non-zero slice is floored at 5% of the ring so six records out of two million stay visible. The arc is then deliberately off true scale &mdash; the legend beside it and the hover title always carry the real figure. Above five categories, switch to bars.</p>
 
       <p class="ds-sub">Area graph &mdash; a measure over time</p>
       <section class="domain" style="margin-bottom:14px">
@@ -2631,7 +2707,6 @@
         </div>
         </div>
       </section>
-      <p class="ds-note">Chips are a single-select filter over the table, and the counts are live. Header cells reveal a sort caret on hover and hold it in brand once sorted; click a second time to reverse. Rows take the muted surface on hover, and a selected row holds the brand tint through hover so the selection never flickers. All data below is fabricated.</p>
     </section>
 
       <!-- record flyout, fixed to the viewport -->
@@ -2712,35 +2787,35 @@
           <div class="ld-cell">
             <span class="ld-lbl">Primary</span>
             <button class="btn btn--primary is-busy" type="button" aria-disabled="true" aria-busy="true">
-              <svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2"/><path d="M8 1.8A6.2 6.2 0 0 1 14.2 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><g clip-path="url(#calDrop)"><rect x="0" y="0" width="16" height="16" fill="currentColor" opacity=".15"/><g class="spin-lvl"><path class="spin-wave" d="M-16 8q2-1.7 4 0t4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0V19H-16Z" fill="currentColor"/></g></g><path d="M8 1.3 13.4 9.1a5.8 5.8 0 1 1-10.8 0L8 1.3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
               Saving&hellip;
             </button>
           </div>
           <div class="ld-cell">
             <span class="ld-lbl">Secondary</span>
             <button class="btn btn--secondary is-busy" type="button" aria-disabled="true" aria-busy="true">
-              <svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2"/><path d="M8 1.8A6.2 6.2 0 0 1 14.2 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><g clip-path="url(#calDrop)"><rect x="0" y="0" width="16" height="16" fill="currentColor" opacity=".15"/><g class="spin-lvl"><path class="spin-wave" d="M-16 8q2-1.7 4 0t4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0V19H-16Z" fill="currentColor"/></g></g><path d="M8 1.3 13.4 9.1a5.8 5.8 0 1 1-10.8 0L8 1.3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
               Exporting&hellip;
             </button>
           </div>
           <div class="ld-cell">
             <span class="ld-lbl">Tertiary</span>
             <button class="btn btn--tertiary is-busy" type="button" aria-disabled="true" aria-busy="true">
-              <svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2"/><path d="M8 1.8A6.2 6.2 0 0 1 14.2 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><g clip-path="url(#calDrop)"><rect x="0" y="0" width="16" height="16" fill="currentColor" opacity=".15"/><g class="spin-lvl"><path class="spin-wave" d="M-16 8q2-1.7 4 0t4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0V19H-16Z" fill="currentColor"/></g></g><path d="M8 1.3 13.4 9.1a5.8 5.8 0 1 1-10.8 0L8 1.3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
               Checking&hellip;
             </button>
           </div>
           <div class="ld-cell">
             <span class="ld-lbl">Destructive</span>
             <button class="btn btn--danger is-busy" type="button" aria-disabled="true" aria-busy="true">
-              <svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2"/><path d="M8 1.8A6.2 6.2 0 0 1 14.2 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><g clip-path="url(#calDrop)"><rect x="0" y="0" width="16" height="16" fill="currentColor" opacity=".15"/><g class="spin-lvl"><path class="spin-wave" d="M-16 8q2-1.7 4 0t4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0V19H-16Z" fill="currentColor"/></g></g><path d="M8 1.3 13.4 9.1a5.8 5.8 0 1 1-10.8 0L8 1.3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
               Removing&hellip;
             </button>
           </div>
           <div class="ld-cell">
             <span class="ld-lbl">Icon only</span>
             <button class="btn btn--secondary btn--icon is-busy" type="button" aria-disabled="true" aria-busy="true" aria-label="Refreshing">
-              <svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2"/><path d="M8 1.8A6.2 6.2 0 0 1 14.2 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><g clip-path="url(#calDrop)"><rect x="0" y="0" width="16" height="16" fill="currentColor" opacity=".15"/><g class="spin-lvl"><path class="spin-wave" d="M-16 8q2-1.7 4 0t4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0V19H-16Z" fill="currentColor"/></g></g><path d="M8 1.3 13.4 9.1a5.8 5.8 0 1 1-10.8 0L8 1.3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
             </button>
           </div>
         </div>
@@ -2768,12 +2843,11 @@
         <div class="tbl-wrap">
           <table class="tbl ld-tbl">
             <thead><tr>
-              <th>Record</th><th>Location</th><th>Status</th><th class="c-act">Actions</th>
+              <th>Record</th><th>Location</th><th>Status</th>
             </tr></thead>
             <tbody id="ldRows"></tbody>
           </table>
         </div>
-        <p class="ds-note ld-note">Row two is mid-save. The row holds <code>aria-busy</code>, its own controls go disabled, and the cell being written keeps its old value under a progress mark rather than emptying &mdash; a blank cell reads as data loss. The other rows stay fully interactive, because one row saving is not a reason to freeze the table. Press <b>Edit</b> on any row to run it yourself.</p>
       </div>
 
       <!-- ---------- other states ---------- -->
@@ -2793,7 +2867,7 @@
         <div class="domain ld-mini">
           <div class="ld-mini-head"><b>Panel</b><span>A region, not the page</span></div>
           <div class="ld-panel">
-            <svg class="spin lg" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-opacity=".28" stroke-width="1.8"/><path d="M8 1.8A6.2 6.2 0 0 1 14.2 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <svg class="spin lg" viewBox="0 0 16 16" aria-hidden="true"><g clip-path="url(#calDrop)"><rect x="0" y="0" width="16" height="16" fill="currentColor" opacity=".15"/><g class="spin-lvl"><path class="spin-wave" d="M-16 8q2-1.7 4 0t4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0V19H-16Z" fill="currentColor"/></g></g><path d="M8 1.3 13.4 9.1a5.8 5.8 0 1 1-10.8 0L8 1.3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
             <span>Loading chart&hellip;</span>
           </div>
           <p>Scoped to the card that is waiting, sized to the content it replaces, and labelled with what is coming.</p>
@@ -2813,7 +2887,7 @@
           <div class="ld-mini-head"><b>Inline field</b><span>Autosave</span></div>
           <div class="ld-field">
             <label class="field"><input type="text" value="Northgate District" aria-label="Record name"></label>
-            <span class="ld-field-say"><svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2"/><path d="M8 1.8A6.2 6.2 0 0 1 14.2 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Saving&hellip;</span>
+            <span class="ld-field-say"><svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><g clip-path="url(#calDrop)"><rect x="0" y="0" width="16" height="16" fill="currentColor" opacity=".15"/><g class="spin-lvl"><path class="spin-wave" d="M-16 8q2-1.7 4 0t4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0V19H-16Z" fill="currentColor"/></g></g><path d="M8 1.3 13.4 9.1a5.8 5.8 0 1 1-10.8 0L8 1.3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> Saving&hellip;</span>
           </div>
           <p>The field stays editable while it saves. Locking an input mid-keystroke loses whatever was typed next.</p>
         </div>
@@ -2828,7 +2902,7 @@
           <div class="ld-mini-head"><b>Loading &ne; empty</b><span>The one to get right</span></div>
           <div class="ld-vs">
             <div class="ld-vs-b bad"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="m5.6 5.6 4.8 4.8M10.4 5.6l-4.8 4.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> No records found</div>
-            <div class="ld-vs-b good"><svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2"/><path d="M8 1.8A6.2 6.2 0 0 1 14.2 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Looking for records&hellip;</div>
+            <div class="ld-vs-b good"><svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><g clip-path="url(#calDrop)"><rect x="0" y="0" width="16" height="16" fill="currentColor" opacity=".15"/><g class="spin-lvl"><path class="spin-wave" d="M-16 8q2-1.7 4 0t4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0V19H-16Z" fill="currentColor"/></g></g><path d="M8 1.3 13.4 9.1a5.8 5.8 0 1 1-10.8 0L8 1.3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> Looking for records&hellip;</div>
           </div>
           <p>Never show the empty state while a request is still open. &ldquo;No records found&rdquo; sends people off to rebuild a filter that was working fine.</p>
         </div>
@@ -2848,7 +2922,6 @@
         </table>
         </div>
       </div>
-      <p class="ds-note">Reduced motion is honoured throughout: with <code>prefers-reduced-motion</code> set, nothing spins, sweeps or shimmers &mdash; the marks hold a static state and the label does the work. That is also why every example here carries text. A control that communicates only by rotating communicates nothing to a screen reader, and nothing to anyone who has turned motion off.</p>
     </section>
 
 
@@ -2883,7 +2956,6 @@
             <span class="er-help" id="erLiveMsg">Validated when you leave the field, not while you type.</span>
           </div>
         </div>
-        <p class="ds-note er-note">The message sits under the field it belongs to, is tied to the input with <code>aria-describedby</code>, and replaces the help text rather than stacking on it. Validation runs on blur, never per keystroke &mdash; telling someone their email is invalid while they are still on the third character is noise, not help. The value they typed is never cleared.</p>
       </div>
 
       <!-- ---------- form summary ---------- -->
@@ -2900,7 +2972,6 @@
             </ul>
           </div>
         </div>
-        <p class="ds-note er-note">Shown only after a submit attempt, at the top of the form, with each item linking to its field. On a long form the failing field is often off screen; a summary is the only thing that gets someone to it. It takes <code>role="alert"</code> so it is announced when it appears.</p>
       </div>
 
       <!-- ---------- action failure ---------- -->
@@ -2932,7 +3003,6 @@
             <tbody id="erRows"></tbody>
           </table>
         </div>
-        <p class="ds-note er-note">The counterpart to the saving row in the previous section. The edit is <b>not</b> discarded: the value the person chose stays on screen, marked as unsaved, with <b>Retry</b> and <b>Discard</b> sitting in the cell that failed rather than in a separate actions column &mdash; on a wide table the recovery belongs beside the thing that needs recovering, not a thousand pixels away from it. Reverting the cell silently and showing a toast is how people lose work without noticing. Only the failed row is marked &mdash; the rest of the table is unaffected, because one failed write is not an outage.</p>
       </div>
 
       <!-- ---------- region + global ---------- -->
@@ -3035,7 +3105,7 @@
       </div>
 
       <!-- ===== 1 ===== -->
-      <article class="pp">
+      <article class="pp" id="pp-1">
         <div class="pp-n">01</div>
         <blockquote class="pp-q">
           <p>Pain Point #1 - The Next/Previous arrows on our tables are the single biggest source of rage clicks in the product. While we do have filters and search nested within our tables, lower tech users seem are opting to click through the pages individually one at a time using the arrow, causing obvious frustration. To quote the data, one user clicked one of these arrows 308 times in only 8 minutes.</p>
@@ -3101,7 +3171,7 @@
       </article>
 
       <!-- ===== 2 ===== -->
-      <article class="pp">
+      <article class="pp" id="pp-2">
         <div class="pp-n">02</div>
         <blockquote class="pp-q">
           <p>Pain Point #2: Users are performing U-turns on a table record and its child records far too often. Think Location Details - users are frequently coming to these detail pages to check their service lines quickly, and then move on to the next one. The biggest issue with this particular workflow is that our locations list resets every time they leave and come back, so they&rsquo;re losing some continuity and costing us a search each time they perform this action. There was one user who U-turned on one of these pages every 10 or so seconds for 45 straight minutes - that reads as a core workflow miss on our part.</p>
@@ -3122,7 +3192,7 @@
       </article>
 
       <!-- ===== 3 ===== -->
-      <article class="pp">
+      <article class="pp" id="pp-3">
         <div class="pp-n">03</div>
         <blockquote class="pp-q">
           <p>Pain Point #3: We get dead clicks absolutely everywhere on our pages. Sometimes thousands in one session. This tells us that what is and isn&rsquo;t interactable is not obvious - users click their mouse thinking something is going to happen, and become immediately frustrated when it doesn&rsquo;t. Some pages like export log even have more dead clicks than views (1270 vs 1243 in the last month). The heaviest inventory user we tracked in that time was hitting a dead spot every two minutes for around two hours.</p>
@@ -3163,7 +3233,7 @@
       </article>
 
       <!-- ===== 4 ===== -->
-      <article class="pp">
+      <article class="pp" id="pp-4">
         <div class="pp-n">04</div>
         <blockquote class="pp-q">
           <p>Pain Point #4: We aren&rsquo;t reinforcing that the platform is actually responding to an action the user has taken. This is a classic UX flaw - the system status should always be communicated to a user and we&rsquo;re taking strides in this system to improve that significantly. A lot of our rage clicks are simply because the platform was loading, and the user had no idea so they think their click just didn&rsquo;t work (we&rsquo;ve all been there). We fundamentally lack loading, in progress, or pending states in our platform today, and we&rsquo;re addressing that.</p>
@@ -3210,7 +3280,7 @@
               <div class="er-mini-head"><b>Pressed, saving, saved</b><span>The three beats</span></div>
               <div class="pp-beats">
                 <div class="pp-beat"><button class="btn btn--secondary is-pressed" type="button" tabindex="-1" aria-hidden="true">Save changes</button><span>Pressed</span></div>
-                <div class="pp-beat"><button class="btn btn--secondary is-busy" type="button" tabindex="-1" aria-hidden="true"><svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2"/><path d="M8 1.8A6.2 6.2 0 0 1 14.2 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Saving&hellip;</button><span>In progress</span></div>
+                <div class="pp-beat"><button class="btn btn--secondary is-busy" type="button" tabindex="-1" aria-hidden="true"><svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><g clip-path="url(#calDrop)"><rect x="0" y="0" width="16" height="16" fill="currentColor" opacity=".15"/><g class="spin-lvl"><path class="spin-wave" d="M-16 8q2-1.7 4 0t4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0V19H-16Z" fill="currentColor"/></g></g><path d="M8 1.3 13.4 9.1a5.8 5.8 0 1 1-10.8 0L8 1.3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> Saving&hellip;</button><span>In progress</span></div>
                 <div class="pp-beat"><button class="btn btn--secondary is-done" type="button" tabindex="-1" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true" style="width:15px;height:15px"><path d="m3.4 8.4 3 3 6.2-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Saved</button><span>Done</span></div>
               </div>
             </div>
@@ -3219,7 +3289,7 @@
       </article>
 
       <!-- ===== 5 ===== -->
-      <article class="pp">
+      <article class="pp" id="pp-5">
         <div class="pp-n">05</div>
         <blockquote class="pp-q">
           <p>Pain Point 5: Form fields aren&rsquo;t communicating the state they&rsquo;re in. Its not always obvious when a page is in an &lsquo;edit-only&rsquo; state or when something is disabled entirely, as we&rsquo;re not currently consistent with the presentation of those elements. Asset Details in particular is where this hurts us the most. Users are clicking a read-only area or something gated by a checkbox too many times. One user even clicked the same ownership checkbox in more than 30 individual sessions. That tells me that we&rsquo;re misrepresenting what is and isn&rsquo;t interactable.</p>
@@ -4957,6 +5027,31 @@
       if (el) el.scrollIntoView({behavior:"smooth", block:"start"});
     });
   });
+  /* ---- nested nav: Customer Pain Points ---- */
+  var painTog = $("navPainTog"), painList = $("navPainList");
+  var subs = Array.prototype.slice.call(document.querySelectorAll(".subanchor"));
+  function setPain(open){
+    if (!painTog) return;
+    painTog.setAttribute("aria-expanded", String(open));
+    painList.hidden = !open;
+  }
+  if (painTog){
+    painTog.addEventListener("click", function(e){
+      e.stopPropagation();
+      setPain(painTog.getAttribute("aria-expanded") !== "true");
+    });
+    /* navigating to the parent reveals its children, but never hides them */
+    var painAnchor = document.querySelector('.nav button.anchor[data-sec="pain"]');
+    if (painAnchor) painAnchor.addEventListener("click", function(){ setPain(true); });
+  }
+  subs.forEach(function(b){
+    b.addEventListener("click", function(){
+      var el = $("pp-" + b.getAttribute("data-pp"));
+      if (el) el.scrollIntoView({behavior: reduced() ? "auto" : "smooth", block:"start"});
+    });
+  });
+  function reduced(){ return window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
+
   if ("IntersectionObserver" in window){
     var io = new IntersectionObserver(function(entries){
       entries.forEach(function(en){
@@ -4969,6 +5064,23 @@
       });
     }, {rootMargin:"-10% 0px -70% 0px", threshold:0});
     Array.prototype.slice.call(document.querySelectorAll(".ds-sec")).forEach(function(s){ io.observe(s); });
+
+    /* the child items track the individual pain points, and reaching the
+       section opens the group so the current item is never hidden */
+    if (subs.length){
+      var io2 = new IntersectionObserver(function(entries){
+        entries.forEach(function(en){
+          if (!en.isIntersecting) return;
+          var n = en.target.id.replace("pp-", "");
+          subs.forEach(function(b){
+            if (b.getAttribute("data-pp") === n) b.setAttribute("aria-current", "true");
+            else b.removeAttribute("aria-current");
+          });
+          setPain(true);
+        });
+      }, {rootMargin:"-15% 0px -65% 0px", threshold:0});
+      Array.prototype.slice.call(document.querySelectorAll(".pp[id]")).forEach(function(a){ io2.observe(a); });
+    }
   }
 
 })();
@@ -4986,9 +5098,7 @@
       return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];
     });
   }
-  var SPIN = '<svg class="spin" viewBox="0 0 16 16" aria-hidden="true">'
-           + '<circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2"/>'
-           + '<path d="M8 1.8A6.2 6.2 0 0 1 14.2 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  var SPIN = '<svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><g clip-path="url(#calDrop)"><rect x="0" y="0" width="16" height="16" fill="currentColor" opacity=".15"/><g class="spin-lvl"><path class="spin-wave" d="M-16 8q2-1.7 4 0t4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0V19H-16Z" fill="currentColor"/></g></g><path d="M8 1.3 13.4 9.1a5.8 5.8 0 1 1-10.8 0L8 1.3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>';
   var TICK = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true" style="width:15px;height:15px">'
            + '<path d="m3.4 8.4 3 3 6.2-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   function reduce(){ return window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
@@ -5053,33 +5163,33 @@
     {id:"REC-0003", name:"Willow Creek Park",   loc:"Post Office Box 214", st:"At Risk",        mode:"rest"}
   ];
 
+  /* No Actions column and no Edit button: the value is the control. Clicking
+     the status opens it in place, and Save/Cancel sit in the same cell - the
+     same rule the failed row two sections down follows. */
+  var PENCIL = '<svg class="pen" width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">'
+             + '<path d="M11.2 2.6 13.4 4.8 5.6 12.6l-3 .8.8-3z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+
   function statusCell(r){
     if (r.mode === "saving"){
       return '<span class="ld-pending">' + SPIN
            + '<span class="was">' + esc(r.was) + '</span>'
-           + '<b>' + esc(r.st) + '</b></span>';
+           + '<b>' + esc(r.st) + '</b></span>'
+           + '<span class="er-rowacts"><span class="er-retrying">Saving&hellip;</span></span>';
     }
     if (r.mode === "edit"){
       return '<span class="ld-edit"><select data-sel="' + esc(r.id) + '" aria-label="Status for ' + esc(r.name) + '">'
            + STATES.map(function(s){
                return '<option' + (s === r.st ? " selected" : "") + '>' + esc(s) + '</option>';
              }).join("")
-           + '</select></span>';
-    }
-    return '<span class="spill ' + CLS[r.st] + '">' + esc(r.st) + '</span>';
-  }
-  function actionCell(r){
-    if (r.mode === "saving"){
-      return '<div class="ld-acts"><button class="btn btn--secondary btn--sm is-busy" type="button" '
-           + 'aria-disabled="true" aria-busy="true">' + SPIN + ' Saving&hellip;</button></div>';
-    }
-    if (r.mode === "edit"){
-      return '<div class="ld-acts">'
+           + '</select></span>'
+           + '<span class="er-rowacts">'
+           + '<button class="btn btn--primary btn--sm" type="button" data-save="' + esc(r.id) + '">Save</button>'
            + '<button class="btn btn--tertiary btn--sm" type="button" data-cancel="' + esc(r.id) + '">Cancel</button>'
-           + '<button class="btn btn--primary btn--sm" type="button" data-save="' + esc(r.id) + '">Save</button></div>';
+           + '</span>';
     }
-    return '<div class="ld-acts"><button class="btn btn--secondary btn--sm" type="button" data-edit="'
-         + esc(r.id) + '">Edit</button></div>';
+    return '<button class="ld-statedit" type="button" data-edit="' + esc(r.id) + '" '
+         + 'aria-label="Change status for ' + esc(r.name) + '">'
+         + '<span class="spill ' + CLS[r.st] + '">' + esc(r.st) + '</span>' + PENCIL + '</button>';
   }
 
   function draw(){
@@ -5087,8 +5197,7 @@
       return '<tr' + (r.mode === "saving" ? ' aria-busy="true"' : "") + (r.done ? ' class="done"' : "") + '>'
            + '<td><span class="t-main">' + esc(r.id) + '</span><span class="t-sub">' + esc(r.name) + '</span></td>'
            + '<td>' + esc(r.loc) + '</td>'
-           + '<td>' + statusCell(r) + '</td>'
-           + '<td class="c-act">' + actionCell(r) + '</td></tr>';
+           + '<td>' + statusCell(r) + '</td></tr>';
     }).join("");
   }
   function find(id){
@@ -5142,9 +5251,7 @@
       return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];
     });
   }
-  var SPIN = '<svg class="spin" viewBox="0 0 16 16" aria-hidden="true">'
-           + '<circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2"/>'
-           + '<path d="M8 1.8A6.2 6.2 0 0 1 14.2 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  var SPIN = '<svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><g clip-path="url(#calDrop)"><rect x="0" y="0" width="16" height="16" fill="currentColor" opacity=".15"/><g class="spin-lvl"><path class="spin-wave" d="M-16 8q2-1.7 4 0t4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0V19H-16Z" fill="currentColor"/></g></g><path d="M8 1.3 13.4 9.1a5.8 5.8 0 1 1-10.8 0L8 1.3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>';
   var WARN = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">'
            + '<circle cx="8" cy="8" r="6.2" stroke="currentColor" stroke-width="1.5"/>'
            + '<path d="M8 4.8v3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>'
@@ -5294,9 +5401,7 @@
   }
   function fmt(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
   function reduce(){ return window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
-  var SPIN = '<svg class="spin" viewBox="0 0 16 16" aria-hidden="true">'
-           + '<circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2"/>'
-           + '<path d="M8 1.8A6.2 6.2 0 0 1 14.2 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  var SPIN = '<svg class="spin" viewBox="0 0 16 16" aria-hidden="true"><g clip-path="url(#calDrop)"><rect x="0" y="0" width="16" height="16" fill="currentColor" opacity=".15"/><g class="spin-lvl"><path class="spin-wave" d="M-16 8q2-1.7 4 0t4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0 4 0V19H-16Z" fill="currentColor"/></g></g><path d="M8 1.3 13.4 9.1a5.8 5.8 0 1 1-10.8 0L8 1.3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>';
   var TICK = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true" style="width:15px;height:15px">'
            + '<path d="m3.4 8.4 3 3 6.2-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var STL = {ok:["On Track","ok"], warn:["Needs Attention","warn"], crit:["At Risk","crit"]};
