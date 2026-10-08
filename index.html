@@ -1059,7 +1059,9 @@
      BUTTONS — 8px radius, WCAG-checked against the page background
      ================================================================ */
   :root{
-    --btn-r:8px;
+    --btn-r:999px;        /* buttons: fully rounded, matching 120State */
+    --field-r:8px;        /* inputs and selects stay square-ish - a pill
+                             text field reads as a button you can't press */
     --btn-line:#858C99;        /* boundary — 3.23:1 on --bg, 3.38:1 on white */
     --btn-line-hover:#5C6371;
     --btn-primary-hover:#1F3269;
@@ -1383,7 +1385,7 @@
   .tbl-foot{position:relative}
   .per-page{display:inline-flex;align-items:center;gap:8px;flex:none}
   .per-page select{
-    border:1px solid var(--btn-line);border-radius:var(--btn-r);background:var(--surface);
+    border:1px solid var(--btn-line);border-radius:var(--field-r);background:var(--surface);
     padding:6px 9px;font:inherit;font-size:13px;font-weight:600;color:var(--text);
   }
   .per-page select:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
@@ -1402,7 +1404,7 @@
   .pg-jump{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--text-2)}
   .pg-jump input{
     width:56px;text-align:center;font:inherit;font-size:13.5px;font-weight:600;color:var(--text);
-    border:1px solid var(--btn-line);border-radius:var(--btn-r);padding:7px 6px;background:var(--surface);
+    border:1px solid var(--btn-line);border-radius:var(--field-r);padding:7px 6px;background:var(--surface);
     font-variant-numeric:tabular-nums;
   }
   .pg-jump input:focus-visible{outline:2px solid var(--brand);outline-offset:1px;border-color:var(--brand)}
@@ -1507,7 +1509,7 @@
   .ld-pending .was{color:var(--text-2);text-decoration:line-through;text-decoration-thickness:1px}
   .ld-edit{display:flex;align-items:center;gap:8px}
   .ld-edit select{
-    border:1px solid var(--btn-line);border-radius:var(--btn-r);background:var(--surface);
+    border:1px solid var(--btn-line);border-radius:var(--field-r);background:var(--surface);
     padding:6px 9px;font:inherit;font-size:13px;font-weight:600;color:var(--text);
   }
   .ld-acts{display:flex;gap:7px;justify-content:flex-end}
@@ -1598,7 +1600,7 @@
   .er-f{display:flex;flex-direction:column;gap:6px;min-width:0}
   .er-f label{font-size:13px;font-weight:600;color:var(--text)}
   .er-in{
-    border:1px solid var(--btn-line);border-radius:var(--btn-r);background:var(--surface);
+    border:1px solid var(--btn-line);border-radius:var(--field-r);background:var(--surface);
     padding:9px 12px;font:inherit;font-size:14px;color:var(--text);width:100%;
   }
   .er-in:focus-visible{outline:2px solid var(--brand);outline-offset:1px;border-color:var(--brand)}
@@ -1628,12 +1630,12 @@
   .er-try > div span{display:block;font-size:12.5px;color:var(--text-2);margin-top:2px}
   .er-inline{
     display:inline-flex;align-items:center;gap:9px;flex-wrap:wrap;
-    background:var(--crit-tint);border:1px solid #F0CBD3;border-radius:var(--btn-r);
+    background:var(--crit-tint);border:1px solid #F0CBD3;border-radius:999px;
     padding:8px 13px;font-size:13px;font-weight:600;color:var(--crit);
   }
   .er-inline svg{flex:none}
   .er-retry{
-    border:1px solid currentColor;border-radius:6px;padding:3px 10px;
+    border:1px solid currentColor;border-radius:999px;padding:3px 11px;
     font-size:12.5px;font-weight:600;color:inherit;background:transparent;
   }
   .er-retry:hover{background:rgba(215,0,73,.1)}
@@ -1766,7 +1768,7 @@
   .pp-kv .k{display:block;font-size:12px;color:var(--text-3);margin-bottom:3px}
   .pp-kv .v{display:block;font-size:14.5px;font-weight:600;color:var(--text)}
   .pp-kv input,.pp-kv select{
-    width:100%;border:1px solid var(--btn-line);border-radius:var(--btn-r);background:var(--surface);
+    width:100%;border:1px solid var(--btn-line);border-radius:var(--field-r);background:var(--surface);
     padding:7px 10px;font:inherit;font-size:14px;font-weight:600;color:var(--text);
   }
   .pp-kv input:focus-visible,.pp-kv select:focus-visible{outline:2px solid var(--brand);outline-offset:1px;border-color:var(--brand)}
@@ -1853,7 +1855,7 @@
   .pp-fw{position:relative;display:flex;flex-direction:column;gap:6px;min-width:0}
   .pp-fw > label{font-size:13px;font-weight:600;color:var(--text)}
   .pp-fw input,.pp-fw select{
-    border:1px solid var(--btn-line);border-radius:var(--btn-r);background:var(--surface);
+    border:1px solid var(--btn-line);border-radius:var(--field-r);background:var(--surface);
     padding:9px 12px;font:inherit;font-size:14px;color:var(--text);width:100%;
   }
   .pp-fw input:focus-visible,.pp-fw select:focus-visible{outline:2px solid var(--brand);outline-offset:1px;border-color:var(--brand)}
@@ -1991,6 +1993,40 @@
   .ld-statedit:hover .pen{opacity:1}
   .ld-statedit:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
   .ld-statedit:focus-visible .pen{opacity:1}
+
+  /* ---------- 01 · Why Calypso ---------- */
+  .why-cards{gap:16px}
+  .why-card{padding:20px 22px 22px}
+  .why-card .why-ico{display:block;color:var(--mark,var(--brand));margin-bottom:13px}
+  .why-card h3{font-size:16.5px;font-weight:600;letter-spacing:-.015em}
+  .why-card p{font-size:13.5px;color:var(--text-2);line-height:1.6;margin-top:7px}
+  .why-foot{font-size:13px;font-style:italic;color:var(--text-2);margin-top:15px}
+
+  .met-head{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:17px 22px;border-bottom:1px solid var(--border);
+  }
+  .met-head h3{font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-3)}
+  .met-row{
+    display:flex;align-items:center;gap:24px;flex-wrap:wrap;
+    padding:18px 22px;border-bottom:1px solid var(--border);
+  }
+  .met-row:last-child{border-bottom:0}
+  .met-fig{min-width:140px}
+  .met-fig b{display:block;font-size:34px;font-weight:700;letter-spacing:-.03em;line-height:1.05}
+  .met-fig>span{display:block;font-size:13px;color:var(--text-2);margin-top:3px}
+  .met-dots{display:grid;grid-template-columns:repeat(18,10px);gap:5px;margin-left:auto}
+  .met-dots i{display:block;width:10px;height:10px;border-radius:50%;background:var(--surface-3)}
+  .met-dots i.on{background:var(--crit)}
+  @media (max-width:900px){.met-dots{margin-left:0}}
+  @media (max-width:560px){.met-dots{grid-template-columns:repeat(12,10px)}}
+
+  .want h3{font-size:17px;font-weight:600;letter-spacing:-.015em}
+  .want .want-lbl{
+    font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--brand);margin-top:17px;
+  }
+  .want p:not(.want-lbl){font-size:13.5px;color:var(--text-2);line-height:1.6;margin-top:6px}
 </style>
 
 </head>
@@ -2031,7 +2067,8 @@
     </div>
 
     <nav class="nav" aria-label="Sections">
-      <button type="button" class="anchor" data-sec="header" aria-current="true" title="Header Navigation"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2" y="2.6" width="12" height="10.8" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M6.4 2.6v10.8" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 5.6h1.6M3.5 8h1.6M3.5 10.4h1.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span class="lbl">Header Navigation</span></button>
+      <button type="button" class="anchor" data-sec="why" aria-current="true" title="Why Calypso"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.9 12.6 8a5.9 5.9 0 1 1-9.2 0L8 1.9Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 6.6v3.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11.8" r=".8" fill="currentColor"/></svg><span class="lbl">Why Calypso</span></button>
+      <button type="button" class="anchor" data-sec="header" title="Header Navigation"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2" y="2.6" width="12" height="10.8" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M6.4 2.6v10.8" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 5.6h1.6M3.5 8h1.6M3.5 10.4h1.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span class="lbl">Header Navigation</span></button>
       <button type="button" class="anchor" data-sec="fonts" title="Fonts"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.6 13.4 7.3 2.6h1.4l4.7 10.8M4.6 9.6h6.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="lbl">Fonts</span></button>
       <button type="button" class="anchor" data-sec="buttons" title="Buttons"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="1.8" y="4.6" width="12.4" height="6.8" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M5 8h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span class="lbl">Buttons</span></button>
       <button type="button" class="anchor" data-sec="cards" title="Cards"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2" y="3.2" width="12" height="9.6" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M2 6.6h12M6 6.6v6.2" stroke="currentColor" stroke-width="1.4"/></svg><span class="lbl">Cards</span></button>
@@ -2079,13 +2116,79 @@
   <main class="main">
     <header class="page-head">
       <h1>Calypso</h1>
-      <p class="sub">120Water&rsquo;s design system</p>
+      <p class="sub">Clarity beneath the surface, guidance to shore</p>
     </header>
+
+
+    <!-- ==================== WHY CALYPSO ==================== -->
+    <section class="ds-sec" id="sec-why">
+      <div class="ds-sec-head">
+        <span class="ds-kicker">01</span>
+        <h2>Why Calypso</h2>
+        <p>Four products, four sets of habits, and a customer who has to relearn the screen every time they move around. This section is the case for rebuilding on one system &mdash; what the name carries, what today&rsquo;s screens cost the people using them, and how we will know it worked.</p>
+      </div>
+
+      <p class="ds-sub">What the name carries</p>
+      <div class="cols cols-3 why-cards">
+        <div class="domain why-card">
+          <span class="why-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.4 7.4q2.4-2.3 4.8 0t4.8 0 4.8 0 4.8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M2.4 12q2.4-2.3 4.8 0t4.8 0 4.8 0 4.8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M2.4 16.6q2.4-2.3 4.8 0t4.8 0 4.8 0 4.8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <h3>Beneath the surface</h3>
+          <p>Service lines, mains and sample results sit underground and in the data. Calypso brings them up where you can read them.</p>
+        </div>
+        <div class="domain why-card">
+          <span class="why-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9.2" stroke="currentColor" stroke-width="2"/><path d="m12 6.5 1.63 3.52 3.87.45-2.87 2.62.79 3.81L12 14.98l-3.42 1.93.79-3.81-2.87-2.62 3.87-.45L12 6.5Z" fill="currentColor"/></svg></span>
+          <h3>Guidance</h3>
+          <p>An operator or compliance manager is steering a utility through LCRI deadlines. Calypso shows the next move.</p>
+        </div>
+        <div class="domain why-card">
+          <span class="why-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M11.1 2.9 5.3 12.6h5.8V2.9Z" fill="currentColor"/><path d="M12.9 6.2v6.4h4.7l-4.7-6.4Z" fill="currentColor"/><path d="M3.3 15.6h17.4M5.2 18.6h13.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <h3>To shore</h3>
+          <p>A verified inventory, a submitted plan, a clean MOR. The product gets you there.</p>
+        </div>
+      </div>
+      <p class="why-foot">Calypso built the raft and showed Odysseus the stars to steer by.</p>
+
+      <p class="ds-sub">What the screens cost today</p>
+      <div class="domain">
+        <div class="met-head">
+          <h3>Last 30 days in PWS</h3>
+          <span class="pill neutral">Measured in Pendo</span>
+        </div>
+        <div id="whyMetrics"></div>
+      </div>
+
+      <p class="ds-sub">What we want from Calypso</p>
+      <div class="domain">
+        <div class="cols cols-3">
+          <div class="cell want">
+            <h3>Customers stop fighting the screen</h3>
+            <p class="want-lbl">How we will know</p>
+            <p>Rage clicks, dead clicks and u-turns fall on every rebuilt page. We measure these in Pendo today.</p>
+            <p class="want-lbl">Who feels it</p>
+            <p>Operators, compliance managers, consultants working across many utilities.</p>
+          </div>
+          <div class="cell want">
+            <h3>One product, not four</h3>
+            <p class="want-lbl">How we will know</p>
+            <p>A customer moving from 120Utility to 120State sees the same header, buttons, tables and status language.</p>
+            <p class="want-lbl">Who feels it</p>
+            <p>Customers on more than one product; sales and success.</p>
+          </div>
+          <div class="cell want">
+            <h3>Faster to build</h3>
+            <p class="want-lbl">How we will know</p>
+            <p>Engineers pull a button, a table or a loading state from one library. One font. Charts drawn from the same tokens.</p>
+            <p class="want-lbl">Who feels it</p>
+            <p>Engineering and product.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- ==================== HEADER NAVIGATION ==================== -->
     <section class="ds-sec" id="sec-header">
       <div class="ds-sec-head">
-        <span class="ds-kicker">01</span>
+        <span class="ds-kicker">02</span>
         <h2>Header Navigation</h2>
         <p>Calypso&rsquo;s header is the only chrome that persists across every product. It carries the brand, the account you are working in, the sections of the current product, and the signed-in user &mdash; in that order, top to bottom. The one on this page is the live component; the controls below drive it.</p>
       </div>
@@ -2176,7 +2279,7 @@
     <!-- ==================== FONTS ==================== -->
     <section class="ds-sec" id="sec-fonts">
       <div class="ds-sec-head">
-        <span class="ds-kicker">02</span>
+        <span class="ds-kicker">03</span>
         <h2>Fonts</h2>
         <p>One family, one scale. Calypso standardises on Inter, replacing the mixed stack we were carrying, and every size on a screen now comes from the steps below rather than being set by hand.</p>
       </div>
@@ -2219,7 +2322,7 @@
     <!-- ==================== BUTTONS ==================== -->
     <section class="ds-sec" id="sec-buttons">
       <div class="ds-sec-head">
-        <span class="ds-kicker">03</span>
+        <span class="ds-kicker">04</span>
         <h2>Buttons</h2>
         <p>Calypso ships three levels of emphasis &mdash; primary, secondary, tertiary &mdash; plus a destructive pair, each at 8px radius. Every one takes a leading icon, a trailing icon, both or neither, and the outlined variants have been recontrasted so their edges actually clear WCAG against the page background.</p>
       </div>
@@ -2313,7 +2416,7 @@
     <!-- ==================== CARDS ==================== -->
     <section class="ds-sec" id="sec-cards">
       <div class="ds-sec-head">
-        <span class="ds-kicker">04</span>
+        <span class="ds-kicker">05</span>
         <h2>Cards</h2>
         <p>Cards sit almost flat &mdash; a 1px border and a hairline shadow &mdash; and lift on hover. The aggregate card is the new pattern: the headline number is a button, and the detail that used to live on a separate page opens underneath it.</p>
       </div>
@@ -2419,7 +2522,7 @@
     <!-- ==================== TABS ==================== -->
     <section class="ds-sec" id="sec-tabs">
       <div class="ds-sec-head">
-        <span class="ds-kicker">05</span>
+        <span class="ds-kicker">06</span>
         <h2>Tabs</h2>
         <p>Two switching patterns, each with a job. Raised tabs partition a page; the segmented control toggles between views of the same records. Both are keyboard-driven with arrow keys.</p>
       </div>
@@ -2458,7 +2561,7 @@
     <!-- ==================== BREADCRUMBS ==================== -->
     <section class="ds-sec" id="sec-crumbs">
       <div class="ds-sec-head">
-        <span class="ds-kicker">06</span>
+        <span class="ds-kicker">07</span>
         <h2>Breadcrumbs</h2>
         <p>The trail sits above the page title, never beside it. Every step before the last is a link; the last is the page you are on and is not clickable. Levels are separated by a single chevron.</p>
       </div>
@@ -2493,7 +2596,7 @@
     <!-- ==================== DATA VISUALIZATION ==================== -->
     <section class="ds-sec" id="sec-dataviz">
       <div class="ds-sec-head">
-        <span class="ds-kicker">07</span>
+        <span class="ds-kicker">08</span>
         <h2>Data Visualization</h2>
         <p>Calypso draws charts as inline SVG from the same tokens as everything else &mdash; no chart library, no imported theme. Every mark has a native <span class="tokname">&lt;title&gt;</span>, so hovering any slice or bar gives the real figure even where the arc is off scale.</p>
       </div>
@@ -2584,7 +2687,7 @@
     <!-- ==================== TABLE ==================== -->
     <section class="ds-sec" id="sec-table">
       <div class="ds-sec-head">
-        <span class="ds-kicker">08</span>
+        <span class="ds-kicker">09</span>
         <h2>Tables</h2>
         <p>A full record page as one block: title, filter chips and the table itself. Every click lands on something &mdash; the whole row opens the record flyout, and the checkbox, ID and actions cells claim their own enlarged hit areas so they never fire the row by accident. All data is fabricated.</p>
       </div>
@@ -2770,7 +2873,7 @@
     <!-- ==================== LOADING STATES ==================== -->
     <section class="ds-sec" id="sec-loading">
       <div class="ds-sec-head">
-        <span class="ds-kicker">09</span>
+        <span class="ds-kicker">10</span>
         <h2>Loading States</h2>
         <p>Every control that starts work has to say so before the work finishes. The rule across Calypso is the same one: the control stays put, takes the disabled treatment, swaps its label to the present tense and shows the progress mark. Nothing reflows, nothing disappears, and the text carries the meaning for anyone who cannot see the motion.</p>
       </div>
@@ -2928,7 +3031,7 @@
     <!-- ==================== ERROR STATES ==================== -->
     <section class="ds-sec" id="sec-error">
       <div class="ds-sec-head">
-        <span class="ds-kicker">10</span>
+        <span class="ds-kicker">11</span>
         <h2>Error States</h2>
         <p>An error has one job: tell the person what happened, where, and what to do next. Calypso puts the message beside the thing that failed, keeps whatever they had typed, and always offers the way forward. Nothing is thrown away because a request came back badly, and nothing blames the person for a system that did not answer.</p>
       </div>
@@ -3076,7 +3179,7 @@
     <!-- ==================== COLORS ==================== -->
     <section class="ds-sec" id="sec-colors">
       <div class="ds-sec-head">
-        <span class="ds-kicker">11</span>
+        <span class="ds-kicker">12</span>
         <h2>Colors</h2>
         <p>Calypso&rsquo;s Foundation ramps, from the 2026 Design System file. Seven hues plus neutrals, each on a four-step ramp: <b>900</b> is the true colour and the only step that carries text or an icon, <b>800</b> is a border or a chart secondary, <b>700</b> is a fill, <b>600</b> is the faintest wash. Click any swatch to copy its hex.</p>
       </div>
@@ -3099,7 +3202,7 @@
     <!-- ==================== CUSTOMER PAIN POINTS ==================== -->
     <section class="ds-sec" id="sec-pain">
       <div class="ds-sec-head">
-        <span class="ds-kicker">12</span>
+        <span class="ds-kicker">13</span>
         <h2>Customer Pain Points</h2>
         <p>What follows is why this system exists. Each item is a behaviour we can see in product data, the change Calypso makes in response, and a working piece of that change to try. None of this is cosmetic.</p>
       </div>
@@ -5878,5 +5981,34 @@
 
     setMode(true);
   })();
+})();
+</script>
+<script>
+/* ================= 01 · WHY CALYPSO ================= */
+(function(){
+  var host = document.getElementById("whyMetrics");
+  if (!host) return;
+
+  /* Pendo, last 30 days in PWS. The dot count is proportional to the largest
+     row, so the three can be compared by eye without reading the figures. */
+  var M = [
+    { n: 2764,  label: "rage clicks" },
+    { n: 10900, label: "dead clicks" },
+    { n: 2957,  label: "u-turns" }
+  ];
+  var DOTS = 36, max = 0, i;
+  for (i = 0; i < M.length; i++) { if (M[i].n > max) max = M[i].n; }
+
+  host.innerHTML = M.map(function(m){
+    var on = Math.max(1, Math.round(m.n / max * DOTS)), dots = "", k;
+    for (k = 0; k < DOTS; k++) dots += "<i" + (k < on ? ' class="on"' : "") + "></i>";
+    var fig = m.n.toLocaleString("en-US");
+    /* one label for the pair: the figure is already read out, so the dots are
+       decorative and stay out of the accessibility tree */
+    return '<div class="met-row">'
+         + '<span class="met-fig"><b>' + fig + "</b><span>" + m.label + "</span></span>"
+         + '<span class="met-dots" aria-hidden="true">' + dots + "</span>"
+         + "</div>";
+  }).join("");
 })();
 </script>
