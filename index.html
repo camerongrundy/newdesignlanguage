@@ -2027,6 +2027,19 @@
     color:var(--brand);margin-top:17px;
   }
   .want p:not(.want-lbl){font-size:13.5px;color:var(--text-2);line-height:1.6;margin-top:6px}
+
+  /* the hero sits on an external host, so the frame has to survive the image
+     not arriving - see the error handler in 01 */
+  .why-fig{margin:24px 0 0;border:1px solid var(--border);border-radius:var(--r);
+    overflow:hidden;background:var(--surface-2);max-width:34%}
+  /* a third of a phone column is a thumbnail, so the cap opens back up */
+  @media (max-width:900px){.why-fig{max-width:62%}}
+  @media (max-width:560px){.why-fig{max-width:100%}}
+  .why-fig img{display:block;width:100%;height:auto}
+  .why-fig .miss{
+    display:block;padding:24px 22px;font-size:13px;color:var(--text-2);line-height:1.6;
+  }
+  .why-fig .miss code{font-size:12px;color:var(--text-3);word-break:break-all}
 </style>
 
 </head>
@@ -2127,6 +2140,10 @@
         <h2>Why Calypso</h2>
         <p>Four products, four sets of habits, and a customer who has to relearn the screen every time they move around. This section is the case for rebuilding on one system &mdash; what the name carries, what today&rsquo;s screens cost the people using them, and how we will know it worked.</p>
       </div>
+
+      <figure class="why-fig">
+        <img id="whyHero" src="https://miro.medium.com/v2/1*oBEKO32RzRmrFBa8fhL2Cw.jpeg" alt="" loading="lazy" decoding="async">
+      </figure>
 
       <p class="ds-sub">What the name carries</p>
       <div class="cols cols-3 why-cards">
@@ -6012,5 +6029,23 @@
          + '<span class="met-dots" aria-hidden="true">' + dots + "</span>"
          + "</div>";
   }).join("");
+})();
+
+/* ---- 01 hero: linked, not embedded, so it can fail ---- */
+(function(){
+  var img = document.getElementById("whyHero");
+  if (!img) return;
+  function fallback(){
+    var fig = img.parentNode;
+    img.hidden = true;
+    if (fig.querySelector(".miss")) return;
+    fig.insertAdjacentHTML("beforeend",
+      '<span class="miss">This image is linked from an external host and did not load. '
+    + 'Drop the file in and it can be embedded in the page instead.<br><code>'
+    + img.getAttribute("src") + "</code></span>");
+  }
+  img.addEventListener("error", fallback);
+  /* a cached-but-broken image fires error before this script runs */
+  if (img.complete && img.naturalWidth === 0) fallback();
 })();
 </script>
