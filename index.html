@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
+<script>
+/* Runs before first paint: the page must never flash light on a dark OS. */
+(function(){
+  try{
+    var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  }catch(e){ document.documentElement.setAttribute("data-theme","light"); }
+})();
+</script>
 <style>
   :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
   img{max-width:100%}
@@ -27,7 +36,10 @@
     --text-3:#888D97;          /* Text/Tertiary */
 
     /* Brand — Base/Action */
-    --brand:#294088;           /* Action/Primary */
+    --brand:#294088;           /* Action/Primary - ink, borders, accents */
+    --brand-fill:#294088;      /* the same colour as a FILL carrying --on-brand ink;
+                                  splits from --brand in dark, where ink must lighten
+                                  but a fill behind white text must not */
     --brand-2:#4E5DA0;         /* Seq Secondary 400 */
     --brand-tint:#EFF2FB;      /* Action/Primary Light */
     --aqua:#2ECCFF;            /* Action/Brand */
@@ -41,6 +53,7 @@
     --warn:#AE6400;            /* alert/900 */
     --warn-tint:#FFF8E8;       /* Status/Warn Light */
     --crit:#D70049;            /* warning/900 */
+    --crit-fill:#D70049;       /* danger fill under --on-brand ink */
     --crit-tint:#F9ECEB;       /* Status/Danger Light */
     --gold:#FFBF00;            /* tertiary/900 */
 
@@ -57,11 +70,59 @@
 
     --logo:#1C397A;          /* brand mark, solid */
     --mark:#0033A0;          /* Calypso mark */
-    --shadow:0 1px 2px rgba(33,37,43,.035);
-    --shadow-hover:0 1px 2px rgba(33,37,43,.06), 0 4px 12px rgba(33,37,43,.08);
+
+    /* ---- theming seams -------------------------------------------------
+       Every value below was an inline literal before dark mode existed.
+       Pulling them up here means the dark theme is one override block
+       instead of ~90 scattered patches. Light values are unchanged. */
+    --shadow-rgb:33,37,43;          /* shadow + scrim ink */
+    --shadow-k:1;                   /* alpha multiplier, raised in dark */
+    --brand-rgb:41,64,136;
+    --logo-rgb:28,57,122;
+    --crit-rgb:215,0,73;
+    --scrim:rgba(33,37,43,.34);     /* a modal veil is NOT elevation: keeping it
+                                       off --shadow-k stops the dark multiplier
+                                       pushing it past opaque */
+    --surface-raised:#FFFFFF;       /* a panel that sits above a scrim; in dark it
+                                       lifts, because you cannot separate two dark
+                                       planes by darkening one of them */
+    --selbar-face:#294088;          /* the floating selection bar keeps a DARK
+                                       face in both themes: it carries white-alpha
+                                       overlays that a light fill would erase */
+    --selbar-ink:#FFFFFF;
+    --selbar-line:transparent;
+    --on-brand-wash:rgba(255,255,255,.22);  /* counter chip on a brand fill */
+    --crumb-sep:#CFCFCF;
+    --hair-1:rgba(33,37,43,.10);    /* hairline on a tinted swatch */
+    --hair-2:rgba(33,37,43,.12);
+    --tab-hover:rgba(255,255,255,.66);
+    --on-brand:#FFFFFF;             /* ink on a brand or danger fill */
+    --on-brand-face:#FFFFFF;        /* a light chip sitting on a brand fill */
+    --on-brand-face-h:#EAEFF9;
+    --on-brand-face-ink:#294088;
+    --inverse-face:#21252B;         /* tooltips, toasts, the error bar */
+    --inverse-ink:#FFFFFF;
+    --inverse-ink-2:rgba(255,255,255,.76);
+    --inverse-line:rgba(255,255,255,.5);
+    --inverse-hover:rgba(255,255,255,.14);
+    --ok-line:#BEE3D3;              /* borders on status tints */
+    --warn-line:#F2DFB6;
+    --crit-line:#F0CBD3;
+    --map-face:#EAF0EE;             /* the map base is drawn as inline SVG in js3;
+                                       var() is legal in presentation attributes,
+                                       so these theme without a redraw */
+    --map-water:#CFE4F2;
+    --map-water-2:#DCEDF8;
+    --map-grid:#D6DEDA;
+    --sk-sheen:#EDF2F8;             /* skeleton sweep mid-stop */
+    --sheen:rgba(255,255,255,.45);  /* progress-bar sweep */
+    --float-face:#FFFFFF;           /* round controls floating over the map */
+
+    --shadow:0 1px 2px rgba(var(--shadow-rgb),calc(.035 * var(--shadow-k)));
+    --shadow-hover:0 1px 2px rgba(var(--shadow-rgb),calc(.06 * var(--shadow-k))), 0 4px 12px rgba(var(--shadow-rgb),calc(.08 * var(--shadow-k)));
     --r:8px;
     --sidebar:238px;
-    color-scheme:light only;
+    color-scheme:light;
   }
   *{box-sizing:border-box}
   body{
@@ -134,7 +195,7 @@
   .menu{
     position:absolute;left:0;right:0;z-index:20;
     background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
-    box-shadow:0 6px 20px rgba(33,37,43,.10), 0 1px 3px rgba(33,37,43,.06);
+    box-shadow:0 6px 20px rgba(var(--shadow-rgb),calc(.10 * var(--shadow-k))), 0 1px 3px rgba(var(--shadow-rgb),calc(.06 * var(--shadow-k)));
     padding:5px;display:flex;flex-direction:column;
   }
   .menu a{
@@ -155,7 +216,7 @@
   .user:hover{background:var(--surface-3)}
   .avatar{
     width:30px;height:30px;border-radius:50%;flex:none;
-    background:var(--brand);color:#fff;font-size:11px;font-weight:600;
+    background:var(--brand-fill);color:var(--on-brand);font-size:11px;font-weight:600;
     display:grid;place-items:center;letter-spacing:.02em;
   }
   .user-name{font-size:13px;font-weight:500}
@@ -228,10 +289,10 @@
     display:flex;align-items:center;gap:8px;background:transparent;
     transition:background .12s ease, box-shadow .12s ease, color .12s ease;
   }
-  .tab:hover{color:var(--text);background:rgba(255,255,255,.66)}
+  .tab:hover{color:var(--text);background:var(--tab-hover)}
   .tab[aria-selected="true"]{
     color:var(--text);background:var(--surface);
-    box-shadow:0 1px 2px rgba(33,37,43,.06), 0 4px 10px rgba(33,37,43,.07);
+    box-shadow:0 1px 2px rgba(var(--shadow-rgb),calc(.06 * var(--shadow-k))), 0 4px 10px rgba(var(--shadow-rgb),calc(.07 * var(--shadow-k)));
   }
   .tab[aria-selected="true"]:hover{background:var(--surface)}
 
@@ -263,7 +324,7 @@
   .tip{
     position:absolute;top:calc(100% + 10px);left:-10px;z-index:30;width:min(340px,70vw);
     background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
-    box-shadow:0 8px 24px rgba(33,37,43,.12), 0 1px 3px rgba(33,37,43,.06);
+    box-shadow:0 8px 24px rgba(var(--shadow-rgb),calc(.12 * var(--shadow-k))), 0 1px 3px rgba(var(--shadow-rgb),calc(.06 * var(--shadow-k)));
     padding:13px 15px;font-size:12px;font-weight:400;line-height:1.5;color:var(--text-2);
     opacity:0;visibility:hidden;transition:opacity .12s ease;pointer-events:none;
     text-transform:none;letter-spacing:0;
@@ -399,7 +460,7 @@
   .btn-solid{
     display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
     border-radius:999px;padding:10px 18px;font-size:14px;font-weight:600;
-    background:var(--brand);color:#fff;border:1px solid var(--brand);
+    background:var(--brand-fill);color:var(--on-brand);border:1px solid var(--brand-fill);
   }
   .btn-solid:hover{background:var(--brand-2);border-color:var(--brand-2)}
   .seg{display:inline-flex;gap:3px;border:1px solid var(--border-2);border-radius:999px;padding:3px}
@@ -409,7 +470,7 @@
   }
   .seg button[aria-pressed="true"]{
     background:var(--surface);color:var(--text);
-    box-shadow:0 1px 2px rgba(33,37,43,.07), 0 2px 6px rgba(33,37,43,.06);
+    box-shadow:0 1px 2px rgba(var(--shadow-rgb),calc(.07 * var(--shadow-k))), 0 2px 6px rgba(var(--shadow-rgb),calc(.06 * var(--shadow-k)));
   }
   .tbl-wrap{overflow-x:auto}
   .tbl{width:100%;border-collapse:collapse;font-size:14px}
@@ -475,7 +536,7 @@
   }
   .banner-ico{
     width:34px;height:34px;border-radius:8px;flex:none;display:grid;place-items:center;
-    background:var(--brand);color:#fff;
+    background:var(--brand-fill);color:var(--on-brand);
   }
   .banner p{font-size:14px;min-width:0}
   .banner p b{color:var(--text);font-weight:600}
@@ -511,10 +572,10 @@
   }
   .switch>span{
     position:absolute;top:2px;left:2px;width:21px;height:21px;border-radius:50%;
-    background:#fff;box-shadow:0 1px 3px rgba(33,37,43,.25);
+    background:var(--float-face);box-shadow:0 1px 3px rgba(var(--shadow-rgb),calc(.25 * var(--shadow-k)));
     transition:transform .24s cubic-bezier(.4,0,.2,1);
   }
-  .switch[aria-checked="true"]{background:var(--brand);border-color:var(--brand)}
+  .switch[aria-checked="true"]{background:var(--brand-fill);border-color:var(--brand-fill)}
   .switch[aria-checked="true"]>span{transform:translateX(19px)}
   @media (max-width:900px){.pair{grid-template-columns:minmax(0,1fr)}}
 
@@ -609,7 +670,7 @@
   .face{display:flex;gap:34px;flex-wrap:wrap;align-items:flex-start}
   .face-mark{
     order:2;flex:none;width:170px;height:170px;border-radius:var(--r);
-    background:var(--brand);color:#fff;display:grid;place-items:center;
+    background:var(--brand-fill);color:var(--on-brand);display:grid;place-items:center;
     font-size:104px;font-weight:600;letter-spacing:-.05em;line-height:1;
   }
   .face-body{order:1;flex:1 1 320px;min-width:0}
@@ -678,7 +739,7 @@
     display:flex;align-items:center;gap:11px;padding:13px 22px;
     border-left:1px solid var(--border);border-top:1px solid var(--border);min-width:0;
   }
-  .semi .chip{width:26px;height:26px;border-radius:6px;flex:none;border:1px solid rgba(33,37,43,.1)}
+  .semi .chip{width:26px;height:26px;border-radius:6px;flex:none;border:1px solid var(--hair-1)}
   .semi .txt{min-width:0}
   .semi .txt b{display:block;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .semi .txt span{
@@ -690,7 +751,7 @@
   .crumbs{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-3);margin-bottom:14px}
   .crumbs a{color:var(--text-3);font-weight:500}
   .crumbs a:hover{color:var(--text-2);text-decoration:underline}
-  .crumbs .sep{color:var(--border-2)}
+  .crumbs .sep{color:var(--crumb-sep)}
   .crumbs .cur{color:var(--text-2);font-weight:500}
   .crumbs a:not(.cur):hover{color:var(--text)}
   .crumbs .trunc{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -710,10 +771,10 @@
   }
   .chip-btn:hover{background:var(--surface-2);color:var(--text);border-color:var(--text-3)}
   .chip-btn[aria-pressed="true"]{
-    background:var(--brand);border-color:var(--brand);color:#fff;
-    box-shadow:0 1px 2px rgba(33,37,43,.08), 0 3px 8px rgba(41,64,136,.18);
+    background:var(--brand-fill);border-color:var(--brand-fill);color:var(--on-brand);
+    box-shadow:0 1px 2px rgba(var(--shadow-rgb),calc(.08 * var(--shadow-k))), 0 3px 8px rgba(var(--brand-rgb),.18);
   }
-  .chip-btn[aria-pressed="true"] .ct{background:rgba(255,255,255,.22);color:#fff}
+  .chip-btn[aria-pressed="true"] .ct{background:var(--on-brand-wash);color:var(--on-brand)}
 
   /* vertically centre a cell's body against taller siblings */
   .cell-vcenter{display:flex;flex-direction:column}
@@ -745,8 +806,9 @@
     margin:-70px auto 14px;
     display:flex;align-items:center;gap:11px;
     padding:9px 11px;border-radius:15px;
-    background:var(--brand);color:#fff;
-    box-shadow:0 14px 32px rgba(28,57,122,.30),0 2px 8px rgba(28,57,122,.22);
+    background:var(--selbar-face);color:var(--selbar-ink);
+    outline:1px solid var(--selbar-line);outline-offset:-1px;
+    box-shadow:0 14px 32px rgba(var(--logo-rgb),.30),0 2px 8px rgba(var(--logo-rgb),.22);
   }
   .selbar-n{
     flex:none;display:grid;place-items:center;
@@ -763,12 +825,12 @@
     font-size:13.5px;font-weight:600;border:1px solid transparent;
     transition:background .14s ease,border-color .14s ease;
   }
-  .selbar-b:focus-visible{outline:2px solid #fff;outline-offset:2px}
-  .selbar-b--solid{background:#fff;color:var(--brand)}
-  .selbar-b--solid:hover{background:#EAEFF9}
-  .selbar-b--line{background:transparent;color:#fff;border-color:rgba(255,255,255,.55)}
-  .selbar-b--line:hover{background:rgba(255,255,255,.12);border-color:#fff}
-  .selbar-b--bare{background:transparent;color:#fff;padding:8px 8px}
+  .selbar-b:focus-visible{outline:2px solid var(--selbar-ink);outline-offset:2px}
+  .selbar-b--solid{background:var(--on-brand-face);color:var(--on-brand-face-ink)}
+  .selbar-b--solid:hover{background:var(--on-brand-face-h)}
+  .selbar-b--line{background:transparent;color:var(--selbar-ink);border-color:rgba(255,255,255,.55)}
+  .selbar-b--line:hover{background:rgba(255,255,255,.12);border-color:var(--selbar-ink)}
+  .selbar-b--bare{background:transparent;color:var(--selbar-ink);padding:8px 8px}
   .selbar-b--bare:hover{text-decoration:underline}
   @media (max-width:640px){
     .selbar{flex-wrap:wrap;width:auto;margin:-20px 14px 14px;bottom:14px;row-gap:9px}
@@ -883,7 +945,7 @@
   .app.rail .nav button,.app.rail .org,.app.rail .user{position:relative}
   .app.rail .nav button::after,.app.rail .org::after{
     content:attr(title);position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);
-    background:var(--text);color:#fff;font-size:12px;font-weight:500;letter-spacing:.01em;
+    background:var(--inverse-face);color:var(--inverse-ink);font-size:12px;font-weight:500;letter-spacing:.01em;
     padding:6px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;
     opacity:0;transition:opacity .12s ease;z-index:60;
   }
@@ -966,7 +1028,7 @@
   .anat-key li b{display:block;font-size:13.5px;font-weight:600;margin-bottom:2px}
   .anat-key li span{display:block;font-size:12.5px;color:var(--text-2);line-height:1.5}
   .anat-key li.lit{background:var(--brand-tint)}
-  .anat-key li.lit::before{background:var(--brand);color:#fff}
+  .anat-key li.lit::before{background:var(--brand-fill);color:var(--on-brand)}
   .anat-key li.lit b{color:var(--brand)}
 
   /* the model */
@@ -978,7 +1040,7 @@
   .mini [data-region]{position:relative;border-radius:8px}
   .mini [data-region].lit::after{
     content:"";position:absolute;inset:-4px;border-radius:9px;
-    border:1.5px solid var(--brand);background:rgba(41,64,136,.07);pointer-events:none;
+    border:1.5px solid var(--brand);background:rgba(var(--brand-rgb),.07);pointer-events:none;
   }
   .mini-top{display:flex;align-items:center;gap:6px;margin-bottom:16px}
   .mini-brand{flex:1 1 auto;min-width:0;overflow:hidden;display:flex;align-items:center}
@@ -1005,7 +1067,7 @@
   .mini-menu{
     position:absolute;left:0;right:0;top:calc(100% + 5px);z-index:5;
     background:var(--surface);border:1px solid var(--border);border-radius:8px;
-    box-shadow:0 8px 22px rgba(33,37,43,.13);padding:4px;display:flex;flex-direction:column;
+    box-shadow:0 8px 22px rgba(var(--shadow-rgb),calc(.13 * var(--shadow-k)));padding:4px;display:flex;flex-direction:column;
   }
   .mini-menu.up{top:auto;bottom:calc(100% + 5px)}
   .mini-menu button{
@@ -1028,7 +1090,7 @@
   .mini-user{display:flex;align-items:center;gap:7px;width:100%;padding:3px 5px;border-radius:7px}
   .mini-user:hover{background:var(--surface-3)}
   .mini-av{
-    width:22px;height:22px;border-radius:50%;flex:none;background:var(--brand);color:#fff;
+    width:22px;height:22px;border-radius:50%;flex:none;background:var(--brand-fill);color:var(--on-brand);
     font-size:9px;font-weight:600;display:grid;place-items:center;
   }
   .mini-user .mu-lbl{font-size:11.5px;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1082,7 +1144,7 @@
   .btn svg{flex:none;width:16px;height:16px}
   .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-  .btn--primary{background:var(--brand);border-color:var(--brand);color:#fff}
+  .btn--primary{background:var(--brand-fill);border-color:var(--brand-fill);color:var(--on-brand)}
   .btn--primary:hover{background:var(--btn-primary-hover);border-color:var(--btn-primary-hover)}
 
   .btn--secondary{background:var(--surface);border-color:var(--btn-line);color:var(--text)}
@@ -1092,7 +1154,7 @@
   .btn--tertiary{background:transparent;border-color:transparent;color:var(--brand)}
   .btn--tertiary:hover{background:var(--brand-tint)}
 
-  .btn--danger{background:var(--crit);border-color:var(--crit);color:#fff}
+  .btn--danger{background:var(--crit-fill);border-color:var(--crit-fill);color:var(--on-brand)}
   .btn--danger:hover{background:var(--btn-danger-hover);border-color:var(--btn-danger-hover)}
 
   .btn--danger-ghost{background:var(--surface);border-color:var(--crit);color:var(--crit)}
@@ -1128,7 +1190,7 @@
   .wcag-exempt{color:var(--text-3);font-weight:600}
   .swatch-dot{
     display:inline-block;width:12px;height:12px;border-radius:3px;
-    border:1px solid rgba(33,37,43,.12);vertical-align:-1px;margin-right:7px;
+    border:1px solid var(--hair-2);vertical-align:-1px;margin-right:7px;
   }
 
   /* ================================================================
@@ -1151,7 +1213,7 @@
      at rest, so the tint is what shows its target is the whole cell; the ID
      and Actions cells already carry a link and a button, and a second tint
      inside the row hover read as a separate control. */
-  .tbl td:has(.hit-check):hover{background:rgba(41,64,136,.055)}
+  .tbl td:has(.hit-check):hover{background:rgba(var(--brand-rgb),.055)}
   .t-link.hit:hover{text-decoration:underline}
   /* .hit-check is a <label>, so it never takes focus itself - the ring has to
      come from the input it wraps, or the enlarged target has none. */
@@ -1164,7 +1226,7 @@
   .rowmenu{overflow-y:auto;
     position:fixed;z-index:70;min-width:186px;padding:5px;
     background:var(--surface);border:1px solid var(--border);border-radius:9px;
-    box-shadow:0 10px 26px rgba(33,37,43,.14), 0 1px 3px rgba(33,37,43,.07);
+    box-shadow:0 10px 26px rgba(var(--shadow-rgb),calc(.14 * var(--shadow-k))), 0 1px 3px rgba(var(--shadow-rgb),calc(.07 * var(--shadow-k)));
     display:flex;flex-direction:column;
   }
   .rowmenu button{
@@ -1177,12 +1239,12 @@
   .rowmenu .sep{height:1px;background:var(--border);margin:4px 3px}
 
   /* ---------- record flyout ---------- */
-  .rec-scrim{position:fixed;inset:0;z-index:90;background:rgba(33,37,43,.34);opacity:0;transition:opacity .22s ease}
+  .rec-scrim{position:fixed;inset:0;z-index:90;background:var(--scrim);opacity:0;transition:opacity .22s ease}
   .rec-scrim.in{opacity:1}
   .rec{
     position:fixed;top:0;right:0;bottom:0;z-index:91;width:min(620px,100vw);
-    background:var(--surface);border-left:1px solid var(--border);
-    box-shadow:-18px 0 44px rgba(33,37,43,.16);
+    background:var(--surface-raised);border-left:1px solid var(--border);
+    box-shadow:-18px 0 44px rgba(var(--shadow-rgb),calc(.16 * var(--shadow-k)));
     display:flex;flex-direction:column;
     transform:translateX(100%);transition:transform .26s cubic-bezier(.4,0,.2,1);
   }
@@ -1227,24 +1289,24 @@
 
   .rec-map{
     position:relative;height:250px;border-radius:10px;overflow:hidden;
-    border:1px solid var(--border);background:#EAF0EE;margin-bottom:20px;
+    border:1px solid var(--border);background:var(--map-face);margin-bottom:20px;
   }
   .rec-map svg.base{position:absolute;inset:0;width:100%;height:100%}
-  .rec-zoom{position:absolute;top:14px;left:14px;display:flex;flex-direction:column;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(33,37,43,.2)}
+  .rec-zoom{position:absolute;top:14px;left:14px;display:flex;flex-direction:column;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(var(--shadow-rgb),calc(.2 * var(--shadow-k)))}
   .rec-zoom button{width:30px;height:30px;background:var(--surface);color:var(--text-2);font-size:16px;line-height:1;display:grid;place-items:center}
   .rec-zoom button:hover{background:var(--surface-3);color:var(--text)}
   .rec-zoom button+button{border-top:1px solid var(--border)}
   .rec-pin{
     position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-    width:38px;height:38px;border-radius:50%;background:#fff;
-    display:grid;place-items:center;box-shadow:0 3px 10px rgba(33,37,43,.25);
+    width:38px;height:38px;border-radius:50%;background:var(--float-face);
+    display:grid;place-items:center;box-shadow:0 3px 10px rgba(var(--shadow-rgb),calc(.25 * var(--shadow-k)));
     transition:transform .18s cubic-bezier(.3,.8,.3,1);
   }
   .rec-pin i{display:block;width:24px;height:24px;border-radius:50%;background:var(--crit)}
   .rec-map:hover .rec-pin{transform:translate(-50%,-50%) scale(1.09)}
   .rec-coord{
     position:absolute;left:14px;bottom:14px;background:var(--surface);border-radius:7px;
-    padding:6px 11px;font-size:12px;color:var(--text-2);box-shadow:0 1px 4px rgba(33,37,43,.18);
+    padding:6px 11px;font-size:12px;color:var(--text-2);box-shadow:0 1px 4px rgba(var(--shadow-rgb),calc(.18 * var(--shadow-k)));
   }
 
   .rec-tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:20px}
@@ -1309,12 +1371,12 @@
   .btn-pill[aria-expanded="true"] svg{color:var(--brand)}
   .btn-pill.on{background:var(--brand-tint);border-color:var(--brand);color:var(--brand)}
   .btn-pill.on svg{color:var(--brand)}
-  .btn-pill.on .ct{background:var(--brand);color:#fff}
+  .btn-pill.on .ct{background:var(--brand-fill);color:var(--on-brand)}
   .sel-trigger:hover{background:var(--brand-2);border-color:var(--brand-2)}
-  .sel-trigger svg{color:#fff}
-  .sel-trigger .ct{background:rgba(255,255,255,.22);color:#fff}
-  .sel-trigger[aria-expanded="true"]{background:var(--brand-2);border-color:var(--brand-2);color:#fff}
-  .sel-trigger[aria-expanded="true"] svg{color:#fff}
+  .sel-trigger svg{color:var(--on-brand)}
+  .sel-trigger .ct{background:var(--on-brand-wash);color:var(--on-brand)}
+  .sel-trigger[aria-expanded="true"]{background:var(--brand-2);border-color:var(--brand-2);color:var(--on-brand)}
+  .sel-trigger[aria-expanded="true"] svg{color:var(--on-brand)}
   #viewMode{flex:none}
   #viewMode button{display:inline-flex;align-items:center;gap:7px}
 
@@ -1349,11 +1411,11 @@
   .rowmenu .none{padding:14px 10px;font-size:12.5px;color:var(--text-3);text-align:center}
 
   /* map view */
-  .map-view{position:relative;height:460px;border-top:1px solid var(--border);background:#EAF0EE;overflow:hidden}
+  .map-view{position:relative;height:460px;border-top:1px solid var(--border);background:var(--map-face);overflow:hidden}
   .map-view svg.base{position:absolute;inset:0;width:100%;height:100%}
   .map-pin{
     position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;
-    background:#fff;display:grid;place-items:center;box-shadow:0 2px 7px rgba(33,37,43,.28);
+    background:var(--float-face);display:grid;place-items:center;box-shadow:0 2px 7px rgba(var(--shadow-rgb),calc(.28 * var(--shadow-k)));
     transition:transform .14s cubic-bezier(.3,.8,.3,1);cursor:pointer;
   }
   .map-pin i{display:block;width:15px;height:15px;border-radius:50%}
@@ -1362,14 +1424,14 @@
   .map-legend{
     position:absolute;left:16px;bottom:16px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;
     background:var(--surface);border-radius:8px;padding:9px 13px;font-size:12.5px;color:var(--text-2);
-    box-shadow:0 2px 8px rgba(33,37,43,.16);
+    box-shadow:0 2px 8px rgba(var(--shadow-rgb),calc(.16 * var(--shadow-k)));
   }
   .map-legend span{display:inline-flex;align-items:center;gap:7px}
   .map-legend i{width:9px;height:9px;border-radius:50%}
   .map-count{
     position:absolute;right:16px;top:16px;background:var(--surface);border-radius:999px;
     padding:7px 14px;font-size:12.5px;font-weight:600;color:var(--text-2);
-    box-shadow:0 2px 8px rgba(33,37,43,.16);
+    box-shadow:0 2px 8px rgba(var(--shadow-rgb),calc(.16 * var(--shadow-k)));
   }
 
   /* a jumped-to section shouldn't sit flush against the viewport edge */
@@ -1415,7 +1477,7 @@
   .pg-nudge{
     position:absolute;bottom:calc(100% + 12px);right:16px;z-index:9;width:min(330px,calc(100vw - 48px));
     background:var(--surface);border:1px solid var(--border-2);border-radius:12px;
-    box-shadow:0 16px 38px rgba(33,37,43,.17);padding:16px 18px 15px;text-align:left;
+    box-shadow:0 16px 38px rgba(var(--shadow-rgb),calc(.17 * var(--shadow-k)));padding:16px 18px 15px;text-align:left;
   }
   .pg-nudge::after{
     content:"";position:absolute;top:100%;right:52px;
@@ -1440,7 +1502,7 @@
      arrows are the last resort. */
   #statusChips .chip-btn{padding:10px 18px;font-size:14.5px;border-color:var(--btn-line)}
   #statusChips .chip-btn:hover{border-color:var(--btn-line-hover);background:var(--surface-2)}
-  #statusChips .chip-btn[aria-pressed="true"]{box-shadow:0 1px 2px rgba(41,64,136,.18)}
+  #statusChips .chip-btn[aria-pressed="true"]{box-shadow:0 1px 2px rgba(var(--brand-rgb),.18)}
   #statusChips .chip-btn .ct{min-width:24px;height:24px;font-size:12.5px}
 
   /* ============ 09 · LOADING STATES ============ */
@@ -1526,7 +1588,7 @@
   @keyframes cal-sk{0%{background-position:100% 0}100%{background-position:-100% 0}}
   .sk{
     display:block;border-radius:5px;height:11px;
-    background:linear-gradient(90deg,var(--surface-3) 0%,#EDF2F8 45%,var(--surface-3) 90%);
+    background:linear-gradient(90deg,var(--surface-3) 0%,var(--sk-sheen) 45%,var(--surface-3) 90%);
     background-size:220% 100%;animation:cal-sk 1.5s ease-in-out infinite;
   }
   /* Two layers: each bar sweeps, and the block as a whole pulses. The sweep
@@ -1551,7 +1613,7 @@
   @keyframes cal-sheen{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
   .ld-prog .bar i::after{
     content:"";position:absolute;inset:0;width:40%;
-    background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);
+    background:linear-gradient(90deg,transparent,var(--sheen),transparent);
     animation:cal-sheen 1.5s ease-in-out infinite;
   }
   .ld-prog-sub{display:block;margin-top:8px;font-size:12px;color:var(--text-3)}
@@ -1569,7 +1631,7 @@
     display:flex;align-items:center;gap:9px;border-radius:9px;padding:11px 13px;
     font-size:13px;font-weight:600;border:1px solid var(--border);
   }
-  .ld-vs-b.bad{background:var(--crit-tint);border-color:#F0CBD3;color:var(--crit)}
+  .ld-vs-b.bad{background:var(--crit-tint);border-color:var(--crit-line);color:var(--crit)}
   .ld-vs-b.good{background:var(--surface-2);color:var(--text-2)}
   .ld-vs-b.good .spin{color:var(--brand)}
 
@@ -1615,7 +1677,7 @@
 
   .er-sum{
     display:flex;gap:13px;align-items:flex-start;
-    background:var(--crit-tint);border:1px solid #F0CBD3;border-left:3px solid var(--crit);
+    background:var(--crit-tint);border:1px solid var(--crit-line);border-left:3px solid var(--crit);
     border-radius:10px;padding:15px 18px;
   }
   .er-sum-ico{flex:none;margin-top:1px;color:var(--crit)}
@@ -1630,7 +1692,7 @@
   .er-try > div span{display:block;font-size:12.5px;color:var(--text-2);margin-top:2px}
   .er-inline{
     display:inline-flex;align-items:center;gap:9px;flex-wrap:wrap;
-    background:var(--crit-tint);border:1px solid #F0CBD3;border-radius:999px;
+    background:var(--crit-tint);border:1px solid var(--crit-line);border-radius:999px;
     padding:8px 13px;font-size:13px;font-weight:600;color:var(--crit);
   }
   .er-inline svg{flex:none}
@@ -1638,7 +1700,7 @@
     border:1px solid currentColor;border-radius:999px;padding:3px 11px;
     font-size:12.5px;font-weight:600;color:inherit;background:transparent;
   }
-  .er-retry:hover{background:rgba(215,0,73,.1)}
+  .er-retry:hover{background:rgba(var(--crit-rgb),.1)}
   .er-retry:focus-visible{outline:2px solid currentColor;outline-offset:2px}
 
   /* --- failed row --- */
@@ -1647,7 +1709,7 @@
   .er-unsaved{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
   .er-unsaved .tagq{
     font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
-    color:var(--crit);background:var(--surface);border:1px solid #F0CBD3;border-radius:5px;padding:2px 7px;
+    color:var(--crit);background:var(--surface);border:1px solid var(--crit-line);border-radius:5px;padding:2px 7px;
   }
   .er-why{display:block;font-size:11.5px;color:var(--crit);margin-top:4px;font-weight:600}
 
@@ -1661,7 +1723,7 @@
 
   .er-panel{
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
-    min-height:128px;border:1px dashed #F0CBD3;background:var(--crit-tint);border-radius:10px;
+    min-height:128px;border:1px dashed var(--crit-line);background:var(--crit-tint);border-radius:10px;
     padding:16px;text-align:center;color:var(--crit);
   }
   .er-panel b{font-size:14px;font-weight:600}
@@ -1670,23 +1732,23 @@
 
   .er-bar{
     display:flex;align-items:center;gap:12px;
-    background:var(--text);color:#fff;border-radius:10px;padding:13px 15px;
+    background:var(--inverse-face);color:var(--inverse-ink);border-radius:10px;padding:13px 15px;
   }
   .er-bar > div{min-width:0;margin-right:auto}
   .er-bar b{display:block;font-size:13.5px;font-weight:600}
-  .er-bar span{display:block;font-size:12px;color:rgba(255,255,255,.76);margin-top:2px}
-  .er-bar .er-retry{color:#fff;border-color:rgba(255,255,255,.5)}
-  .er-bar .er-retry:hover{background:rgba(255,255,255,.14)}
-  .er-dot{flex:none;width:9px;height:9px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 4px rgba(255,255,255,.14)}
+  .er-bar span{display:block;font-size:12px;color:var(--inverse-ink-2);margin-top:2px}
+  .er-bar .er-retry{color:var(--inverse-ink);border-color:var(--inverse-line)}
+  .er-bar .er-retry:hover{background:var(--inverse-hover)}
+  .er-dot{flex:none;width:9px;height:9px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 4px var(--inverse-hover)}
 
   .er-three{display:flex;flex-direction:column;gap:9px}
   .er-three-b{border:1px solid var(--border);border-radius:9px;padding:11px 13px;background:var(--surface-2)}
   .er-three-b b{display:block;font-size:13px;font-weight:600;margin-bottom:2px}
   .er-three-b span{font-size:12.5px;color:var(--text-2);line-height:1.5}
   .er-three-b a{color:var(--brand);font-weight:600;text-decoration:underline}
-  .er-three-b.warn{background:var(--warn-tint);border-color:#F2DFB6}
+  .er-three-b.warn{background:var(--warn-tint);border-color:var(--warn-line)}
   .er-three-b.warn b{color:var(--warn)}
-  .er-three-b.bad{background:var(--crit-tint);border-color:#F0CBD3}
+  .er-three-b.bad{background:var(--crit-tint);border-color:var(--crit-line)}
   .er-three-b.bad b{color:var(--crit)}
   .er-three-b.bad a{color:var(--crit)}
 
@@ -1709,7 +1771,7 @@
      the label reads as a status, not as more of the uppercase heading. */
   .ds-wip{
     display:inline-block;vertical-align:middle;margin-left:10px;
-    background:var(--warn-tint);border:1px solid #F2DFB6;border-radius:999px;
+    background:var(--warn-tint);border:1px solid var(--warn-line);border-radius:999px;
     padding:3px 10px;font-size:11px;font-weight:600;letter-spacing:.01em;
     text-transform:none;color:var(--warn);
   }
@@ -1724,7 +1786,7 @@
   .pp:last-of-type{margin-bottom:22px}
   .pp-n{
     position:absolute;left:0;top:2px;width:38px;height:38px;border-radius:50%;
-    display:grid;place-items:center;background:var(--brand);color:#fff;
+    display:grid;place-items:center;background:var(--brand-fill);color:var(--on-brand);
     font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;
   }
   .pp::before{
@@ -1754,7 +1816,7 @@
   .pp-fakerows{display:flex;flex-direction:column;gap:14px;padding:4px 16px 16px;border-bottom:1px solid var(--border)}
   .pp-foot{border-top:0}
   .pp-bar-card .search input:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
-  .pp-bar-card.lit .search{box-shadow:0 0 0 3px rgba(41,64,136,.22);border-radius:999px}
+  .pp-bar-card.lit .search{box-shadow:0 0 0 3px rgba(var(--brand-rgb),.22);border-radius:999px}
 
   /* 02 / 03 — mini tables */
   .pp-tbl tbody tr{cursor:pointer}
@@ -1814,11 +1876,11 @@
   button.tipt[aria-disabled="true"]{cursor:help}
   .tip-b{
     position:absolute;bottom:calc(100% + 9px);left:0;z-index:30;width:max-content;max-width:290px;
-    background:var(--text);color:#fff;border-radius:8px;padding:9px 12px;
+    background:var(--inverse-face);color:var(--inverse-ink);border-radius:8px;padding:9px 12px;
     font-size:12.5px;font-weight:500;line-height:1.5;
     opacity:0;visibility:hidden;transform:translateY(3px);
     transition:opacity .13s ease,transform .13s ease,visibility .13s;
-    box-shadow:0 10px 26px rgba(33,37,43,.22);pointer-events:none;
+    box-shadow:0 10px 26px rgba(var(--shadow-rgb),calc(.22 * var(--shadow-k)));pointer-events:none;
   }
   .tip-b::after{content:"";position:absolute;top:100%;left:18px;border:6px solid transparent;border-top-color:var(--text)}
   .tipw:hover .tip-b,.tipw:focus-within .tip-b{opacity:1;visibility:visible;transform:none}
@@ -1827,7 +1889,7 @@
   /* 04 */
   .pp-btnrow{display:flex;gap:11px;flex-wrap:wrap;align-items:center}
   .btn.is-pressed{background:var(--surface-3);border-color:var(--btn-line-hover);transform:translateY(1px)}
-  .btn.is-done{color:var(--ok);border-color:#BEE3D3;background:var(--ok-tint)}
+  .btn.is-done{color:var(--ok);border-color:var(--ok-line);background:var(--ok-tint)}
   .pp-prog{margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
   .pp-prog .bar{height:8px;border-radius:99px;background:var(--surface-3);overflow:hidden}
   .pp-prog .bar i{display:block;height:100%;border-radius:99px;background:var(--brand);transition:width .28s ease}
@@ -1847,8 +1909,8 @@
   .pp-form-acts{display:flex;gap:9px}
   .pp-form-acts .btn.pulse{animation:pp-pulse .9s ease 2}
   @keyframes pp-pulse{
-    0%,100%{box-shadow:0 0 0 0 rgba(41,64,136,0)}
-    45%{box-shadow:0 0 0 6px rgba(41,64,136,.28)}
+    0%,100%{box-shadow:0 0 0 0 rgba(var(--brand-rgb),0)}
+    45%{box-shadow:0 0 0 6px rgba(var(--brand-rgb),.28)}
   }
   @media (prefers-reduced-motion:reduce){.pp-form-acts .btn.pulse{animation:none;outline:3px solid var(--brand);outline-offset:2px}}
   .pp-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:18px}
@@ -1877,9 +1939,9 @@
   .pp-check{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600;color:var(--text);cursor:pointer}
   .pp-lockmsg{
     position:absolute;left:0;bottom:calc(100% + 7px);z-index:20;width:max-content;max-width:250px;
-    background:var(--text);color:#fff;border-radius:8px;padding:8px 11px;font-size:12.5px;font-weight:500;line-height:1.45;
+    background:var(--inverse-face);color:var(--inverse-ink);border-radius:8px;padding:8px 11px;font-size:12.5px;font-weight:500;line-height:1.45;
     opacity:0;visibility:hidden;transition:opacity .13s ease,visibility .13s;pointer-events:none;
-    box-shadow:0 10px 26px rgba(33,37,43,.22);
+    box-shadow:0 10px 26px rgba(var(--shadow-rgb),calc(.22 * var(--shadow-k)));
   }
   .pp-lockmsg::after{content:"";position:absolute;top:100%;left:16px;border:6px solid transparent;border-top-color:var(--text)}
   .pp-fw.lock:hover .pp-lockmsg,.pp-fw.lock:focus-within .pp-lockmsg{opacity:1;visibility:visible}
@@ -2040,6 +2102,121 @@
     display:block;padding:24px 22px;font-size:13px;color:var(--text-2);line-height:1.6;
   }
   .why-fig .miss code{font-size:12px;color:var(--text-3);word-break:break-all}
+
+  /* ====================================================================
+     DARK THEME
+     Only tokens are redefined — no component rule is duplicated. Two pairs
+     split here that are one value in light: --brand (ink) vs --brand-fill
+     (a fill under white ink), and --crit vs --crit-fill. Dark needs the ink
+     lighter and the fill darker; light needs them identical.
+     ==================================================================== */
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+
+    --bg:#0D131F;
+    --surface:#151D2C;
+    --surface-2:#1C2536;
+    --surface-3:#273348;
+    --border:#2C3850;
+    --border-2:#717F96;   /* clears 3:1 on every surface step, so input and
+                             pill boundaries stay identifiable (SC 1.4.11) */
+    --text:#EBEFF7;
+    --text-2:#BCC6D6;
+    --text-3:#98A4B8;
+
+    --brand:#9FB6F2;
+    --brand-fill:#A8BDF5;   /* light fill + dark ink: no dark navy clears
+                              both white-ink 4.5:1 and 3:1 on the card */
+    --brand-2:#93A9EE;
+    --brand-tint:#1E2A47;
+    --aqua:#2ECCFF;
+
+    --accent:#63C3F0;
+    --accent-2:#64C9FA;
+    --accent-tint:#12293B;
+    --ok:#4ECF97;
+    --ok-tint:#102D22;
+    --warn:#E3A63F;
+    --warn-tint:#2E2412;
+    --crit:#FF7A96;
+    --crit-fill:#FF9FB2;
+    --crit-tint:#331823;
+    --gold:#FFBF00;
+
+    --dv-blue:#64C9FA;
+    --dv-blue-mid:#4BA6D7;
+    --dv-navy:#8094E8;
+    --dv-amber:#E9A23E;
+    --dv-danger:#F2667E;
+    --sev-crit:#E3645F;
+    --sev-risk:#E08B45;
+    --sev-caution:#EDB05A;
+    --sev-healthy:#39C79A;
+
+    --logo:#AFC0F0;
+    --mark:#9CBBFF;
+
+    /* elevation reads as blacker and deeper on a dark ground */
+    --shadow-rgb:0,0,0;
+    --shadow-k:3;
+    --brand-rgb:159,182,242;   /* tint washes lighten rather than darken */
+    --logo-rgb:0,0,0;
+    --crit-rgb:255,122,150;
+    --hair-1:rgba(255,255,255,.13);
+    --hair-2:rgba(255,255,255,.15);
+    --tab-hover:rgba(255,255,255,.07);
+
+    --on-brand:#16203A;
+    --on-brand-wash:rgba(0,0,0,.14);
+    --scrim:rgba(0,0,0,.48);   /* dark content needs far less veil than light:
+                                  at .34x3 it was opaque, and even .6 crushes the
+                                  text behind it into the background */
+    --surface-raised:#1F2A3B;
+    --selbar-face:#33479B;
+    --selbar-ink:#FFFFFF;
+    --selbar-line:rgba(255,255,255,.14);
+    --crumb-sep:#98A4B8;
+    --on-brand-face:#FFFFFF;
+    --on-brand-face-h:#E3EAFB;
+    --on-brand-face-ink:#20306B;
+
+    --inverse-face:#333F58;    /* a raised panel, not an inversion: flipping to
+                                  white on a dark page is a flashbang */
+    --inverse-ink:#F3F6FC;
+    --inverse-ink-2:rgba(255,255,255,.78);
+    --inverse-line:rgba(255,255,255,.52);
+    --inverse-hover:rgba(255,255,255,.15);
+
+    --ok-line:#235F46;
+    --warn-line:#5C4621;
+    --crit-line:#6E2B45;
+    --map-face:#152430;
+    --map-water:#1E3C52;
+    --map-water-2:#27506A;
+    --map-grid:#223341;
+    --sk-sheen:#334159;
+    --sheen:rgba(255,255,255,.20);
+    --float-face:#1F2A3C;
+
+    --btn-line:#808CA3;
+    --btn-line-hover:#A6B2C7;
+    --btn-primary-hover:#C2D1F9;
+    --btn-danger-hover:#FFBDC9;
+    --btn-disabled-face:#202A3B;
+    --btn-disabled-ink:#919CB0;
+    --btn-disabled-line:#3C4860;
+  }
+
+  /* ---------- theme control (header footer rail) ---------- */
+  /* The shared .seg marks its selected chip with --surface, which is also the
+     sidebar's own colour - so this instance gets a recessed track to sit in. */
+  .theme-seg{display:flex;width:100%;margin-bottom:12px;
+    background:var(--surface-2);border-color:var(--border)}
+  .theme-seg button{flex:1 1 0;justify-content:center;gap:7px;padding:7px 10px;font-size:13px}
+  .theme-seg button svg{flex:none}
+  .app.rail .theme-seg{flex-direction:column;gap:3px}
+  .app.rail .theme-seg .lbl{display:none}
+  .app.rail .theme-seg button{padding:7px 0}
 </style>
 
 </head>
@@ -2110,6 +2287,14 @@
     </nav>
 
     <div class="side-foot">
+      <div class="seg theme-seg" id="themeSeg" role="group" aria-label="Colour theme">
+        <button type="button" data-theme-set="light" aria-pressed="true" title="Light theme">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="3.1" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.4v1.5M8 13.1v1.5M14.6 8h-1.5M2.9 8H1.4M12.67 3.33l-1.06 1.06M4.39 11.61l-1.06 1.06M12.67 12.67l-1.06-1.06M4.39 4.39 3.33 3.33" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span class="lbl">Light</span>
+        </button>
+        <button type="button" data-theme-set="dark" aria-pressed="false" title="Dark theme">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13.6 9.9A5.9 5.9 0 0 1 6.1 2.4a5.9 5.9 0 1 0 7.5 7.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span class="lbl">Dark</span>
+        </button>
+      </div>
       <div class="menu user-menu" id="userMenu" hidden>
         <a href="#">Component Library</a>
         <a href="#">Figma Source</a>
@@ -2594,7 +2779,7 @@
       <div class="ds-sec-head">
         <span class="ds-kicker">05</span>
         <h2>Buttons</h2>
-        <p>Calypso ships three levels of emphasis &mdash; primary, secondary, tertiary &mdash; plus a destructive pair, each at 8px radius. Every one takes a leading icon, a trailing icon, both or neither, and the outlined variants have been recontrasted so their edges actually clear WCAG against the page background.</p>
+        <p>Calypso ships three levels of emphasis &mdash; primary, secondary, tertiary &mdash; plus a destructive pair, each fully rounded. Every one takes a leading icon, a trailing icon, both or neither, and the outlined variants have been recontrasted so their edges actually clear WCAG against the page background.</p>
       </div>
 
       <p class="ds-sub">Variants</p>
@@ -3476,9 +3661,11 @@
 <script>
 (function(){
   "use strict";
+  /* Charts paint with var() references rather than values resolved at build
+     time, so a theme switch repaints them without re-running any of this.
+     var() is legal in SVG presentation attributes, not just inline style. */
   function C(){
-    var s = getComputedStyle(document.documentElement);
-    function g(n){ return s.getPropertyValue(n).trim(); }
+    function g(n){ return "var(" + n + ")"; }
     return {
       brand:g("--brand"), accent:g("--accent"), accent2:g("--accent-2"),
       ok:g("--ok"), warn:g("--warn"), crit:g("--crit"), gold:g("--gold"),
@@ -3487,6 +3674,11 @@
       sevCrit:g("--sev-crit"), sevRisk:g("--sev-risk"), sevCaution:g("--sev-caution"), sevHealthy:g("--sev-healthy"),
       text3:g("--text-3"), border:g("--border"), surface3:g("--surface-3")
     };
+  }
+  /* ...but a swatch that prints its own hex still needs the resolved value */
+  function hexOf(name){
+    var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v.toUpperCase();
   }
   var $ = function(id){ return document.getElementById(id); };
   function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
@@ -3794,11 +3986,18 @@
     {label:"Severity 4 — caution", t:"--sev-caution", c:c.sevCaution},
     {label:"Severity 7 — healthy", t:"--sev-healthy", c:c.sevHealthy}
   ];
-  $("dvRamp").innerHTML = RAMP.map(function(r){
-    return '<div class="key"><span class="dot" style="background:'+r.c+'"></span>'
-         + '<span class="nm">'+esc(r.label)+'</span>'
-         + '<span class="v mono" style="font-size:11.5px;text-transform:uppercase;color:var(--text-3)">'+esc(r.c)+'</span></div>';
-  }).join("");
+  function drawRamp(){
+    $("dvRamp").innerHTML = RAMP.map(function(r){
+      return '<div class="key"><span class="dot" style="background:'+r.c+'"></span>'
+           + '<span class="nm">'+esc(r.label)+'</span>'
+           + '<span class="v mono" style="font-size:11.5px;text-transform:uppercase;color:var(--text-3)">'
+           + esc(hexOf(r.t)) + '</span></div>';
+    }).join("");
+  }
+  drawRamp();
+  /* the only chart text that carries a resolved value, so it is the only one
+     that has to be rewritten when the theme flips */
+  document.addEventListener("calypso:theme", drawRamp);
 
   /* ================= 05 · TABLE ================= */
   var STATUS = {
@@ -4354,10 +4553,10 @@
       var rows = pageRows;
       $("mapView").innerHTML =
           '<svg class="base" viewBox="0 0 900 460" preserveAspectRatio="xMidYMid slice" aria-hidden="true">'
-        + '<rect width="900" height="460" fill="#EAF0EE"/>'
-        + '<path d="M-20 140C160 100 320 180 520 140 660 112 780 132 920 116" stroke="#CFE4F2" stroke-width="26" fill="none"/>'
-        + '<path d="M-20 152C160 112 320 192 520 152 660 124 780 144 920 128" stroke="#DCEDF8" stroke-width="10" fill="none"/>'
-        + '<g stroke="#D6DEDA" stroke-width="2.5" fill="none">'
+        + '<rect width="900" height="460" fill="var(--map-face)"/>'
+        + '<path d="M-20 140C160 100 320 180 520 140 660 112 780 132 920 116" stroke="var(--map-water)" stroke-width="26" fill="none"/>'
+        + '<path d="M-20 152C160 112 320 192 520 152 660 124 780 144 920 128" stroke="var(--map-water-2)" stroke-width="10" fill="none"/>'
+        + '<g stroke="var(--map-grid)" stroke-width="2.5" fill="none">'
         + '<path d="M-20 250H920M-20 356H920M150-20v500M420-20v500M700-20v500"/>'
         + '<path d="M30 460 250 180 430 300 610 70M200 460 440 220 690 380 920 250"/></g></svg>'
         + pinsFor(rows)
@@ -4460,10 +4659,10 @@
 
       html += '<div class="rec-map">'
         + '<svg class="base" viewBox="0 0 560 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">'
-        + '<rect width="560" height="250" fill="#EAF0EE"/>'
-        + '<path d="M-20 78 C120 52 240 96 360 74 C450 58 520 70 580 60" stroke="#CFE4F2" stroke-width="17" fill="none"/>'
-        + '<path d="M-20 86 C120 60 240 104 360 82 C450 66 520 78 580 68" stroke="#DCEDF8" stroke-width="7" fill="none"/>'
-        + '<g stroke="#D6DEDA" stroke-width="2" fill="none">'
+        + '<rect width="560" height="250" fill="var(--map-face)"/>'
+        + '<path d="M-20 78 C120 52 240 96 360 74 C450 58 520 70 580 60" stroke="var(--map-water)" stroke-width="17" fill="none"/>'
+        + '<path d="M-20 86 C120 60 240 104 360 82 C450 66 520 78 580 68" stroke="var(--map-water-2)" stroke-width="7" fill="none"/>'
+        + '<g stroke="var(--map-grid)" stroke-width="2" fill="none">'
         + '<path d="M-20 130H580M-20 196H580M96-20v290M300-20v290M470-20v290"/>'
         + '<path d="M20 250 150 96 268 168 380 40M120 250 250 118 400 210 560 130"/></g>'
         + '</svg>'
@@ -4806,11 +5005,28 @@
     ["Border / Primary",        "#EDEDED", "--border"],
     ["Border / Input",          "#CFCFCF", "--border-2"]
   ];
-  $("semis").innerHTML = SEMANTIC.map(function(s){
-    return '<button class="semi sw" type="button" data-hex="'+s[1]+'" style="border-radius:0;box-shadow:none">'
-      + '<span class="chip" style="background:'+s[1]+'"></span>'
-      + '<span class="txt"><b>'+esc(s[0])+'</b><span>'+s[1]+' · '+esc(s[2])+'</span></span></button>';
-  }).join("");
+  /* Semantic tokens are read live rather than printed from the table above:
+     in dark mode --surface is not #FFFFFF, and a palette page that says
+     otherwise is worse than no palette page. The Foundation ramps higher up
+     stay fixed — those are the brand ramp, which does not change with theme. */
+  function liveHex(name, fallback){
+    var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return (v || fallback).toUpperCase();
+  }
+  function paintTokens(){
+    $("semis").innerHTML = SEMANTIC.map(function(s){
+      var hex = liveHex(s[2], s[1]);
+      return '<button class="semi sw" type="button" data-hex="'+hex+'" style="border-radius:0;box-shadow:none">'
+        + '<span class="chip" style="background:var('+s[2]+')"></span>'
+        + '<span class="txt"><b>'+esc(s[0])+'</b><span>'+hex+' · '+esc(s[2])+'</span></span></button>';
+    }).join("");
+    $("dvSemis").innerHTML = DVTOK.map(function(s){
+      var hex = liveHex(s[2], s[1]);
+      return '<button class="semi sw" type="button" data-hex="'+hex+'" style="border-radius:0;box-shadow:none">'
+        + '<span class="chip" style="background:var('+s[2]+')"></span>'
+        + '<span class="txt"><b>'+esc(s[0])+'</b><span>'+hex+' · '+esc(s[2])+'</span></span></button>';
+    }).join("");
+  }
 
   var DVTOK = [
     ["Seq Primary 400",   "#64C9FA", "--dv-blue"],
@@ -4824,11 +5040,8 @@
     ["Sev 4 — Caution",  "#E8A340", "--sev-caution"],
     ["Sev 7 — Healthy",  "#1D9E75", "--sev-healthy"]
   ];
-  $("dvSemis").innerHTML = DVTOK.map(function(s){
-    return '<button class="semi sw" type="button" data-hex="'+s[1]+'" style="border-radius:0;box-shadow:none">'
-      + '<span class="chip" style="background:'+s[1]+'"></span>'
-      + '<span class="txt"><b>'+esc(s[0])+'</b><span>'+s[1]+' · '+esc(s[2])+'</span></span></button>';
-  }).join("");
+  paintTokens();
+  document.addEventListener("calypso:theme", paintTokens);
 
   document.addEventListener("click", function(e){
     var sw = e.target.closest(".sw[data-hex]");
@@ -6047,5 +6260,39 @@
   img.addEventListener("error", fallback);
   /* a cached-but-broken image fires error before this script runs */
   if (img.complete && img.naturalWidth === 0) fallback();
+})();
+</script>
+<script>
+/* ================= THEME ================= */
+(function(){
+  var root = document.documentElement;
+  var seg  = document.getElementById("themeSeg");
+  if (!seg) return;
+  var btns = Array.prototype.slice.call(seg.querySelectorAll("[data-theme-set]"));
+  var mq   = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  var chosen = false;   /* once the user picks, the OS stops steering */
+
+  function apply(mode){
+    root.setAttribute("data-theme", mode);
+    btns.forEach(function(b){
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-theme-set") === mode));
+    });
+    /* charts repaint themselves through var(); this is only for the handful of
+       places that print a resolved colour as text */
+    document.dispatchEvent(new CustomEvent("calypso:theme", { detail: { mode: mode } }));
+  }
+
+  apply(root.getAttribute("data-theme") === "dark" ? "dark" : "light");
+
+  seg.addEventListener("click", function(e){
+    var b = e.target.closest("[data-theme-set]");
+    if (!b) return;
+    chosen = true;
+    apply(b.getAttribute("data-theme-set"));
+  });
+
+  if (mq && mq.addEventListener){
+    mq.addEventListener("change", function(e){ if (!chosen) apply(e.matches ? "dark" : "light"); });
+  }
 })();
 </script>
